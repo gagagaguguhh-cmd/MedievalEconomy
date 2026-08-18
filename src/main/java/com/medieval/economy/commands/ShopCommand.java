@@ -39,11 +39,11 @@ public class ShopCommand implements CommandExecutor {
         return true;
     }
 
-    // Menu Utama Kategori Toko
+    // Menu Utama Kategori Toko (Simetris & Estetis)
     public void openShopMainMenu(Player player) {
-        Inventory gui = Bukkit.createInventory(null, 27, Component.text("🛒 Toko Server - Kategori", NamedTextColor.DARK_GREEN));
+        Inventory gui = Bukkit.createInventory(null, 36, Component.text("🏰 TOKO KERAJAAN - KATEGORI", NamedTextColor.DARK_GREEN));
 
-        int[] slots = {10, 12, 14, 16, 22};
+        int[] slots = {11, 13, 15, 20, 24};
         ShopManager.ShopCategory[] categories = ShopManager.ShopCategory.values();
 
         for (int i = 0; i < categories.length && i < slots.length; i++) {
@@ -53,18 +53,71 @@ public class ShopCommand implements CommandExecutor {
             if (meta != null) {
                 meta.displayName(Component.text(cat.getDisplayName(), NamedTextColor.GOLD, TextDecoration.BOLD));
                 List<Component> lore = new ArrayList<>();
-                lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+                lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
                 lore.add(Component.text(cat.getDescription(), NamedTextColor.YELLOW));
-                lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
-                lore.add(Component.text("👉 Klik untuk membuka kategori ini!", NamedTextColor.GREEN, TextDecoration.ITALIC));
+                lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+                lore.add(Component.text("👉 Klik untuk melihat barang!", NamedTextColor.GREEN, TextDecoration.ITALIC));
                 meta.lore(lore);
                 item.setItemMeta(meta);
             }
             gui.setItem(slots[i], item);
         }
 
-        // Decorate background
-        ItemStack filler = new ItemStack(Material.GREEN_STAINED_GLASS_PANE);
+        // Bingkai Estetis GUI
+        ItemStack border = new ItemStack(Material.GREEN_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = border.getItemMeta();
+        if (borderMeta != null) {
+            borderMeta.displayName(Component.text(" "));
+            border.setItemMeta(borderMeta);
+        }
+        for (int i = 0; i < gui.getSize(); i++) {
+            if (gui.getItem(i) == null) {
+                gui.setItem(i, border);
+            }
+        }
+
+        player.openInventory(gui);
+    }
+
+    // Sub-Menu Kategori Toko
+    public void openCategoryMenu(Player player, ShopManager.ShopCategory category) {
+        Inventory gui = Bukkit.createInventory(null, 54, Component.text("🛒 Kategori: " + category.getDisplayName(), NamedTextColor.DARK_GREEN));
+
+        List<ShopManager.ShopItem> items = shopManager.getItemsByCategory(category);
+        int[] itemSlots = {
+            10, 11, 12, 13, 14, 15, 16,
+            19, 20, 21, 22, 23, 24, 25,
+            28, 29, 30, 31, 32, 33, 34
+        };
+
+        for (int i = 0; i < items.size() && i < itemSlots.length; i++) {
+            ShopManager.ShopItem shopItem = items.get(i);
+            ItemStack item = new ItemStack(shopItem.material(), 1);
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.displayName(Component.text(shopItem.displayName(), NamedTextColor.YELLOW, TextDecoration.BOLD));
+                List<Component> lore = new ArrayList<>();
+                lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+                lore.add(Component.text("💵 Harga Dasar (1x): ", NamedTextColor.GRAY).append(Component.text(economyManager.formatMoney(shopItem.buyPrice()), NamedTextColor.GOLD, TextDecoration.BOLD)));
+                lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+                lore.add(Component.text("👉 Klik untuk pilih jumlah beli!", NamedTextColor.GREEN, TextDecoration.ITALIC));
+                meta.lore(lore);
+                item.setItemMeta(meta);
+            }
+            gui.setItem(itemSlots[i], item);
+        }
+
+        // Tombol Kembali
+        ItemStack back = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = back.getItemMeta();
+        if (backMeta != null) {
+            backMeta.displayName(Component.text("⬅️ Kembali ke Menu Utama", NamedTextColor.RED, TextDecoration.BOLD));
+            back.setItemMeta(backMeta);
+        }
+        gui.setItem(49, back);
+
+        // Bingkai Estetis Glass Pane
+        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
         if (fillerMeta != null) {
             fillerMeta.displayName(Component.text(" "));
@@ -79,47 +132,51 @@ public class ShopCommand implements CommandExecutor {
         player.openInventory(gui);
     }
 
-    // Sub-Menu Kategori Toko
-    public void openCategoryMenu(Player player, ShopManager.ShopCategory category) {
-        Inventory gui = Bukkit.createInventory(null, 54, Component.text("🛒 Toko: " + category.getDisplayName(), NamedTextColor.DARK_GREEN));
+    // GUI Pilihan Jumlah Pembelian (1x, 16x, 32x, 64x)
+    public void openQuantityMenu(Player player, ShopManager.ShopItem shopItem) {
+        Inventory gui = Bukkit.createInventory(null, 27, Component.text("📦 Beli: " + shopItem.displayName(), NamedTextColor.DARK_GREEN));
 
-        List<ShopManager.ShopItem> items = shopManager.getItemsByCategory(category);
-        for (int i = 0; i < items.size() && i < 45; i++) {
-            ShopManager.ShopItem shopItem = items.get(i);
-            ItemStack item = new ItemStack(shopItem.material(), shopItem.amount());
-            ItemMeta meta = item.getItemMeta();
+        int[] amounts = {1, 16, 32, 64};
+        int[] slots = {10, 12, 14, 16};
+
+        for (int i = 0; i < amounts.length; i++) {
+            int qty = amounts[i];
+            double totalPrice = shopItem.buyPrice() * qty;
+
+            ItemStack option = new ItemStack(shopItem.material(), qty);
+            ItemMeta meta = option.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text(shopItem.displayName(), NamedTextColor.YELLOW, TextDecoration.BOLD));
+                meta.displayName(Component.text("Beli " + qty + "x " + shopItem.displayName(), NamedTextColor.YELLOW, TextDecoration.BOLD));
                 List<Component> lore = new ArrayList<>();
-                lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
-                lore.add(Component.text("📦 Jumlah: ", NamedTextColor.GRAY).append(Component.text(shopItem.amount() + "x", NamedTextColor.WHITE)));
-                lore.add(Component.text("💵 Harga Beli: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatMoney(shopItem.buyPrice()), NamedTextColor.GOLD, TextDecoration.BOLD)));
-                lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
-                lore.add(Component.text("👉 Klik kiri untuk membeli!", NamedTextColor.GREEN, TextDecoration.ITALIC));
+                lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+                lore.add(Component.text("📦 Jumlah: ", NamedTextColor.GRAY).append(Component.text(qty + "x", NamedTextColor.WHITE)));
+                lore.add(Component.text("💵 Total Harga: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatMoney(totalPrice), NamedTextColor.GOLD, TextDecoration.BOLD)));
+                lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+                lore.add(Component.text("👉 Klik untuk konfirmasi beli!", NamedTextColor.GREEN, TextDecoration.ITALIC));
                 meta.lore(lore);
-                item.setItemMeta(meta);
+                option.setItemMeta(meta);
             }
-            gui.setItem(i, item);
+            gui.setItem(slots[i], option);
         }
 
-        // Tombol Kembali
-        ItemStack back = new ItemStack(Material.ARROW);
-        ItemMeta backMeta = back.getItemMeta();
-        if (backMeta != null) {
-            backMeta.displayName(Component.text("⬅️ Kembali ke Kategori Utama", NamedTextColor.RED, TextDecoration.BOLD));
-            back.setItemMeta(backMeta);
+        // Tombol Batal / Kembali
+        ItemStack cancel = new ItemStack(Material.BARRIER);
+        ItemMeta cancelMeta = cancel.getItemMeta();
+        if (cancelMeta != null) {
+            cancelMeta.displayName(Component.text("❌ Batal / Kembali", NamedTextColor.RED, TextDecoration.BOLD));
+            cancel.setItemMeta(cancelMeta);
         }
-        gui.setItem(49, back);
+        gui.setItem(22, cancel);
 
-        // Decorate bottom row
-        ItemStack filler = new ItemStack(Material.GREEN_STAINED_GLASS_PANE);
+        // Bingkai
+        ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
         if (fillerMeta != null) {
             fillerMeta.displayName(Component.text(" "));
             filler.setItemMeta(fillerMeta);
         }
-        for (int i = 45; i < 54; i++) {
-            if (i != 49) {
+        for (int i = 0; i < gui.getSize(); i++) {
+            if (gui.getItem(i) == null) {
                 gui.setItem(i, filler);
             }
         }
