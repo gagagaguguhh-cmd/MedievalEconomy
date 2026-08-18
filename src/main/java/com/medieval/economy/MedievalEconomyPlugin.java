@@ -12,6 +12,7 @@ public class MedievalEconomyPlugin extends JavaPlugin {
     private ShopManager shopManager;
     private SellManager sellManager;
     private AuctionManager auctionManager;
+    private OrderManager orderManager;
     private ScoreboardManager scoreboardManager;
     private SettingsManager settingsManager;
 
@@ -22,6 +23,7 @@ public class MedievalEconomyPlugin extends JavaPlugin {
         this.shopManager = new ShopManager();
         this.sellManager = new SellManager();
         this.auctionManager = new AuctionManager(this);
+        this.orderManager = new OrderManager(this);
         this.scoreboardManager = new ScoreboardManager(this, economyManager);
         this.settingsManager = new SettingsManager(this);
 
@@ -32,19 +34,23 @@ public class MedievalEconomyPlugin extends JavaPlugin {
         getCommand("shop").setExecutor(new ShopCommand(shopManager, economyManager));
         getCommand("sell").setExecutor(new SellCommand());
         getCommand("auctions").setExecutor(new AuctionsCommand(auctionManager, economyManager));
+        getCommand("order").setExecutor(new OrderCommand(orderManager, economyManager));
         getCommand("settings").setExecutor(new SettingsCommand(scoreboardManager, settingsManager));
 
         // Register event listeners
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(economyManager, scoreboardManager), this);
-        getServer().getPluginManager().registerEvents(new InventoryClickListener(economyManager, shopManager, sellManager, auctionManager, scoreboardManager, settingsManager), this);
+        getServer().getPluginManager().registerEvents(new InventoryClickListener(economyManager, shopManager, sellManager, auctionManager, orderManager, scoreboardManager, settingsManager), this);
 
-        getLogger().info("MedievalEconomy plugin 1.0.0 berhasil diaktifkan!");
+        getLogger().info("MedievalEconomy plugin 1.0.0 (Order & Multi-Currency) berhasil diaktifkan!");
     }
 
     @Override
     public void onDisable() {
         if (auctionManager != null) {
             auctionManager.saveAuctions();
+        }
+        if (orderManager != null) {
+            orderManager.saveOrders();
         }
         if (economyManager != null) {
             economyManager.saveData();
