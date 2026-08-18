@@ -74,16 +74,23 @@ public class AuctionsCommand implements CommandExecutor {
             return true;
         }
 
-        openAuctionGUI(player);
+        openAuctionGUI(player, AuctionManager.AuctionCategory.ALL, 1);
         return true;
     }
 
-    public void openAuctionGUI(Player player) {
-        Inventory gui = Bukkit.createInventory(null, 54, Component.text("⚖️ Pasar Lelang Pemain", NamedTextColor.DARK_PURPLE));
+    public void openAuctionGUI(Player player, AuctionManager.AuctionCategory category, int page) {
+        Inventory gui = Bukkit.createInventory(null, 54, Component.text("⚖️ Lelang [" + category.name() + "] Hal." + page, NamedTextColor.DARK_PURPLE));
 
-        List<AuctionManager.AuctionListing> listings = auctionManager.getListings();
-        for (int i = 0; i < listings.size() && i < 45; i++) {
-            AuctionManager.AuctionListing listing = listings.get(i);
+        List<AuctionManager.AuctionListing> categoryListings = auctionManager.getListingsByCategory(category);
+        int itemsPerPage = 36;
+        int maxPages = Math.max(1, (int) Math.ceil((double) categoryListings.size() / itemsPerPage));
+        int currentPage = Math.min(Math.max(1, page), maxPages);
+
+        int startIndex = (currentPage - 1) * itemsPerPage;
+        int endIndex = Math.min(startIndex + itemsPerPage, categoryListings.size());
+
+        for (int i = startIndex; i < endIndex; i++) {
+            AuctionManager.AuctionListing listing = categoryListings.get(i);
             ItemStack displayItem = listing.item().clone();
             ItemMeta meta = displayItem.getItemMeta();
             if (meta != null) {
@@ -102,18 +109,66 @@ public class AuctionsCommand implements CommandExecutor {
                 meta.lore(lore);
                 displayItem.setItemMeta(meta);
             }
-            gui.setItem(i, displayItem);
+            gui.setItem(i - startIndex, displayItem);
         }
 
-        // Decorate bottom row
+        // Row 5: Kategori Filter (Slots 36 - 40)
+        int catSlot = 36;
+        for (AuctionManager.AuctionCategory cat : AuctionManager.AuctionCategory.values()) {
+            ItemStack catItem = new ItemStack(cat.getIcon());
+            ItemMeta catMeta = catItem.getItemMeta();
+            if (catMeta != null) {
+                catMeta.displayName(Component.text(cat.getDisplayName(), cat == category ? NamedTextColor.GREEN : NamedTextColor.YELLOW, TextDecoration.BOLD));
+                if (cat == category) {
+                    List<Component> lore = new ArrayList<>();
+                    lore.add(Component.text(" (Kategori Aktif) ", NamedTextColor.GREEN, TextDecoration.ITALIC));
+                    catMeta.lore(lore);
+                }
+                catItem.setItemMeta(catMeta);
+            }
+            gui.setItem(catSlot++, catItem);
+        }
+
+        // Row 6: Navigasi Halaman
+        if (currentPage > 1) {
+            ItemStack prev = new ItemStack(Material.ARROW);
+            ItemMeta prevMeta = prev.getItemMeta();
+            if (prevMeta != null) {
+                prevMeta.displayName(Component.text("⬅️ Halaman Sebelumnya (" + (currentPage - 1) + ")", NamedTextColor.YELLOW, TextDecoration.BOLD));
+                prev.setItemMeta(prevMeta);
+            }
+            gui.setItem(48, prev);
+        }
+
+        ItemStack infoPage = new ItemStack(Material.PAPER);
+        ItemMeta infoMeta = infoPage.getItemMeta();
+        if (infoMeta != null) {
+            infoMeta.displayName(Component.text("📄 Halaman " + currentPage + " / " + maxPages, NamedTextColor.GOLD, TextDecoration.BOLD));
+            infoPage.setItemMeta(infoMeta);
+        }
+        gui.setItem(49, infoPage);
+
+        if (currentPage < maxPages) {
+            ItemStack next = new ItemStack(Material.ARROW);
+            ItemMeta nextMeta = next.getItemMeta();
+            if (nextMeta != null) {
+                nextMeta.displayName(Component.text("➡️ Halaman Selanjutnya (" + (currentPage + 1) + ")", NamedTextColor.YELLOW, TextDecoration.BOLD));
+                next.setItemMeta(nextMeta);
+            }
+            gui.setItem(50, next);
+        }
+
+        // Decorate filler
         ItemStack filler = new ItemStack(Material.PURPLE_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
         if (fillerMeta != null) {
             fillerMeta.displayName(Component.text(" "));
             filler.setItemMeta(fillerMeta);
         }
-        for (int i = 45; i < 54; i++) {
-            gui.setItem(i, filler);
+        for (int i = 36; i < 54; i++) {
+            if (gui.getItem(i) == null) {
+                gui.setItem(i, filler);
+            }
         }
 
         player.openInventory(gui);
