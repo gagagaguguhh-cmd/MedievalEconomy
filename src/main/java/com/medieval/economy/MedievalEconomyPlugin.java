@@ -1,6 +1,7 @@
 package com.medieval.economy;
 
 import com.medieval.economy.commands.*;
+import com.medieval.economy.listeners.CommandBlockerListener;
 import com.medieval.economy.listeners.InventoryClickListener;
 import com.medieval.economy.listeners.PlayerJoinListener;
 import com.medieval.economy.managers.*;
@@ -40,8 +41,9 @@ public class MedievalEconomyPlugin extends JavaPlugin {
         // Register event listeners
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(economyManager, scoreboardManager), this);
         getServer().getPluginManager().registerEvents(new InventoryClickListener(economyManager, shopManager, sellManager, auctionManager, orderManager, scoreboardManager, settingsManager), this);
+        getServer().getPluginManager().registerEvents(new CommandBlockerListener(), this);
 
-        getLogger().info("MedievalEconomy plugin 1.0.0 (Order & Multi-Currency) berhasil diaktifkan!");
+        getLogger().info("MedievalEconomy plugin 1.0.0 (Command Blocker & UI) berhasil diaktifkan!");
     }
 
     @Override
