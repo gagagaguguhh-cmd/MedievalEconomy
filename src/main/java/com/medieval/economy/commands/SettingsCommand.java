@@ -44,8 +44,9 @@ public class SettingsCommand implements CommandExecutor {
 
         boolean sbEnabled = scoreboardManager.isEnabled(player.getUniqueId());
         boolean sellConfirm = settingsManager.isSellConfirmMode(player.getUniqueId().toString());
+        boolean monstersEnabled = settingsManager.isMonstersEnabled(player.getUniqueId().toString());
 
-        // Item Toggle Scoreboard (Slot 11)
+        // Item Toggle Scoreboard (Slot 10)
         ItemStack sbItem = new ItemStack(sbEnabled ? Material.LIME_DYE : Material.GRAY_DYE);
         ItemMeta sbMeta = sbItem.getItemMeta();
         if (sbMeta != null) {
@@ -61,9 +62,27 @@ public class SettingsCommand implements CommandExecutor {
             sbMeta.lore(lore);
             sbItem.setItemMeta(sbMeta);
         }
-        gui.setItem(11, sbItem);
+        gui.setItem(10, sbItem);
 
-        // Item Toggle Sell Confirmation (Slot 15)
+        // Item Toggle Monster (Slot 13)
+        ItemStack monsterItem = new ItemStack(monstersEnabled ? Material.ZOMBIE_HEAD : Material.SKELETON_SKULL);
+        ItemMeta monsterMeta = monsterItem.getItemMeta();
+        if (monsterMeta != null) {
+            monsterMeta.displayName(Component.text("🧟 Spawning Monster (Creeper, Zombie, dll)", NamedTextColor.RED, TextDecoration.BOLD));
+            List<Component> lore = new ArrayList<>();
+            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+            lore.add(Component.text("Status Monster: ", NamedTextColor.GRAY).append(
+                    monstersEnabled ? Component.text("MUNCUL ✅", NamedTextColor.GREEN, TextDecoration.BOLD)
+                                    : Component.text("TIDAK MUNCUL ❌", NamedTextColor.RED, TextDecoration.BOLD)
+            ));
+            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+            lore.add(Component.text("👉 Klik untuk " + (monstersEnabled ? "menonaktifkan" : "mengaktifkan") + " spawn monster di dekatmu!", NamedTextColor.AQUA, TextDecoration.ITALIC));
+            monsterMeta.lore(lore);
+            monsterItem.setItemMeta(monsterMeta);
+        }
+        gui.setItem(13, monsterItem);
+
+        // Item Toggle Sell Confirmation (Slot 16)
         ItemStack sellItem = new ItemStack(sellConfirm ? Material.CHEST : Material.HOPPER);
         ItemMeta sellMeta = sellItem.getItemMeta();
         if (sellMeta != null) {
@@ -79,7 +98,7 @@ public class SettingsCommand implements CommandExecutor {
             sellMeta.lore(lore);
             sellItem.setItemMeta(sellMeta);
         }
-        gui.setItem(15, sellItem);
+        gui.setItem(16, sellItem);
 
         // Decorate background with grey glass panes
         ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);

@@ -47,4 +47,13 @@ public class SettingsManager {
         settingsConfig.set(uuid + ".sell_confirm_mode", confirm);
         saveSettings();
     }
+
+    public boolean isMonstersEnabled(String uuid) {
+        return settingsConfig.getBoolean(uuid + ".monsters_enabled", true);
+    }
+
+    public void setMonstersEnabled(String uuid, boolean enabled) {
+        settingsConfig.set(uuid + ".monsters_enabled", enabled);
+        saveSettings();
+    }
 }

@@ -41,6 +41,7 @@ public class MedievalEconomyPlugin extends JavaPlugin {
         // Register event listeners
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(economyManager, scoreboardManager), this);
         getServer().getPluginManager().registerEvents(new InventoryClickListener(economyManager, shopManager, sellManager, auctionManager, orderManager, scoreboardManager, settingsManager), this);
+        getServer().getPluginManager().registerEvents(new com.medieval.economy.listeners.MonsterToggleListener(settingsManager), this);
         getServer().getPluginManager().registerEvents(new CommandBlockerListener(), this);
 
         getLogger().info("MedievalEconomy plugin 1.0.0 (Command Blocker & UI) berhasil diaktifkan!");

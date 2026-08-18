@@ -64,13 +64,19 @@ public class InventoryClickListener implements Listener {
         if (title.contains("Pengaturan Server & UI")) {
             event.setCancelled(true);
             int slot = event.getSlot();
-            if (slot == 11) {
+            if (slot == 10) {
                 boolean current = scoreboardManager.isEnabled(player.getUniqueId());
                 boolean next = !current;
                 scoreboardManager.setEnabled(player.getUniqueId(), next);
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 new SettingsCommand(scoreboardManager, settingsManager).openSettingsGUI(player);
-            } else if (slot == 15) {
+            } else if (slot == 13) {
+                boolean current = settingsManager.isMonstersEnabled(player.getUniqueId().toString());
+                boolean next = !current;
+                settingsManager.setMonstersEnabled(player.getUniqueId().toString(), next);
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                new SettingsCommand(scoreboardManager, settingsManager).openSettingsGUI(player);
+            } else if (slot == 16) {
                 boolean current = settingsManager.isSellConfirmMode(player.getUniqueId().toString());
                 boolean next = !current;
                 settingsManager.setSellConfirmMode(player.getUniqueId().toString(), next);
@@ -179,7 +185,7 @@ public class InventoryClickListener implements Listener {
                         return;
                     }
 
-                    ItemStack buyItem = new ItemStack(targetItem.material(), qty);
+                    ItemStack buyItem = targetItem.createItemStack(qty);
                     HashMap<Integer, ItemStack> overflow = player.getInventory().addItem(buyItem);
                     if (!overflow.isEmpty()) {
                         player.sendMessage(Component.text("❌ Inventory kamu penuh!", NamedTextColor.RED));
