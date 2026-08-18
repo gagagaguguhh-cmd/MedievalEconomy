@@ -51,9 +51,9 @@ public class ScoreboardManager {
         org.bukkit.scoreboard.ScoreboardManager manager = Bukkit.getScoreboardManager();
         Scoreboard board = manager.getNewScoreboard();
 
-        Component title = Component.text("⛏ ", NamedTextColor.DARK_GRAY)
-                .append(Component.text("MEDIEVAL", TextColor.color(0xaaaaaa), TextDecoration.BOLD))
-                .append(Component.text(" ⛏", NamedTextColor.DARK_GRAY));
+        Component title = Component.text("🏰 ", NamedTextColor.DARK_GRAY)
+                .append(Component.text("MEDIEVAL", TextColor.color(0xd4af37), TextDecoration.BOLD))
+                .append(Component.text(" 🏰", NamedTextColor.DARK_GRAY));
 
         Objective obj = board.registerNewObjective("medieval_sb", Criteria.DUMMY, title);
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
@@ -80,13 +80,17 @@ public class ScoreboardManager {
         double dollar = economyManager.getDollar(uuid);
         double gold = economyManager.getGold(uuid);
         String playtime = formatPlaytime(player);
+        int ping = player.getPing();
 
-        obj.getScore("§7--------------").setScore(6);
-        obj.getScore("§f👤 §e" + player.getName()).setScore(5);
-        obj.getScore("§f💵 §a" + economyManager.formatDollar(dollar)).setScore(4);
-        obj.getScore("§f🏆 §6" + economyManager.formatGold(gold)).setScore(3);
-        obj.getScore("§f⏱ §b" + playtime).setScore(2);
-        obj.getScore("§8--------------").setScore(1);
+        String pingColor = ping < 80 ? "§a" : (ping < 150 ? "§e" : "§c");
+
+        obj.getScore("§7────────────────").setScore(7);
+        obj.getScore("§f👤 §e" + player.getName()).setScore(6);
+        obj.getScore("§f💵 §a" + economyManager.formatDollar(dollar)).setScore(5);
+        obj.getScore("§f🏆 §6" + economyManager.formatGold(gold)).setScore(4);
+        obj.getScore("§f⏱ §b" + playtime).setScore(3);
+        obj.getScore("§f📶 " + pingColor + ping + " ms").setScore(2);
+        obj.getScore("§8────────────────").setScore(1);
     }
 
     private void updateAllPlaytimes() {
