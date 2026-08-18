@@ -52,16 +52,9 @@ public class ScoreboardManager {
         org.bukkit.scoreboard.ScoreboardManager manager = Bukkit.getScoreboardManager();
         Scoreboard board = manager.getNewScoreboard();
 
-        // Judul Scoreboard: MEDIEVAL dengan gradasi/style batu (Dark Gray & Gray)
+        // Judul Compact: MEDIEVAL
         Component title = Component.text("⛏ ", NamedTextColor.DARK_GRAY)
-                .append(Component.text("M", TextColor.color(0x555555), TextDecoration.BOLD))
-                .append(Component.text("E", TextColor.color(0xaaaaaa), TextDecoration.BOLD))
-                .append(Component.text("D", TextColor.color(0x555555), TextDecoration.BOLD))
-                .append(Component.text("I", TextColor.color(0xaaaaaa), TextDecoration.BOLD))
-                .append(Component.text("E", TextColor.color(0x555555), TextDecoration.BOLD))
-                .append(Component.text("V", TextColor.color(0xaaaaaa), TextDecoration.BOLD))
-                .append(Component.text("A", TextColor.color(0x555555), TextDecoration.BOLD))
-                .append(Component.text("L", TextColor.color(0xaaaaaa), TextDecoration.BOLD))
+                .append(Component.text("MEDIEVAL", TextColor.color(0xaaaaaa), TextDecoration.BOLD))
                 .append(Component.text(" ⛏", NamedTextColor.DARK_GRAY));
 
         Objective obj = board.registerNewObjective("medieval_sb", Criteria.DUMMY, title);
@@ -90,12 +83,12 @@ public class ScoreboardManager {
         double balance = economyManager.getBalance(uuid);
         String playtime = formatPlaytime(player);
 
-        // Baris-baris tampilan
-        obj.getScore("§7------------------").setScore(6);
-        obj.getScore("§f👤 Pemain: §e" + player.getName()).setScore(5);
-        obj.getScore("§f💰 Gold: §6" + economyManager.formatMoney(balance)).setScore(4);
-        obj.getScore("§f⏱ Main: §b" + playtime).setScore(3);
-        obj.getScore("§8------------------").setScore(2);
+        // Tampilan Compact & Minimalis (Hemat tempat di Layar HP/Mobile)
+        obj.getScore("§7--------------").setScore(5);
+        obj.getScore("§f👤 §e" + player.getName()).setScore(4);
+        obj.getScore("§f💰 §6" + economyManager.formatMoney(balance)).setScore(3);
+        obj.getScore("§f⏱ §b" + playtime).setScore(2);
+        obj.getScore("§8--------------").setScore(1);
     }
 
     private void updateAllPlaytimes() {
@@ -113,9 +106,9 @@ public class ScoreboardManager {
         long minutes = (totalSeconds % 3600) / 60;
 
         if (hours > 0) {
-            return hours + " jam " + minutes + "m";
+            return hours + "j " + minutes + "m";
         } else {
-            return minutes + " menit";
+            return minutes + "m";
         }
     }
 }
