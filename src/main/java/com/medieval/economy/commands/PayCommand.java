@@ -37,7 +37,7 @@ public class PayCommand implements CommandExecutor {
 
         String targetName = args[0];
         if (targetName.equalsIgnoreCase(player.getName())) {
-            player.sendMessage(Component.text("😂 Mana bisa transfer Gold ke diri sendiri, kocak!", NamedTextColor.RED));
+            player.sendMessage(Component.text("😂 Mana bisa transfer uang ke diri sendiri, kocak!", NamedTextColor.RED));
             return true;
         }
 
@@ -45,12 +45,12 @@ public class PayCommand implements CommandExecutor {
         try {
             amount = Double.parseDouble(args[1]);
         } catch (NumberFormatException e) {
-            player.sendMessage(Component.text("❌ Jumlah Gold harus berupa angka positif!", NamedTextColor.RED));
+            player.sendMessage(Component.text("❌ Jumlah Dollar harus berupa angka positif!", NamedTextColor.RED));
             return true;
         }
 
         if (amount <= 0) {
-            player.sendMessage(Component.text("❌ Jumlah Gold harus lebih besar dari 0!", NamedTextColor.RED));
+            player.sendMessage(Component.text("❌ Jumlah Dollar harus lebih besar dari 0!", NamedTextColor.RED));
             return true;
         }
 
@@ -62,21 +62,21 @@ public class PayCommand implements CommandExecutor {
             return true;
         }
 
-        if (!economyManager.hasBalance(player.getUniqueId(), amount)) {
+        if (!economyManager.hasDollar(player.getUniqueId(), amount)) {
             player.sendMessage(Component.text("❌ Uang kamu gak cukup buat transfer ", NamedTextColor.RED)
-                    .append(Component.text(economyManager.formatMoney(amount), NamedTextColor.YELLOW)));
+                    .append(Component.text(economyManager.formatDollar(amount), NamedTextColor.YELLOW)));
             return true;
         }
 
-        economyManager.withdrawBalance(player.getUniqueId(), amount);
-        economyManager.addBalance(targetUUID, amount);
+        economyManager.withdrawDollar(player.getUniqueId(), amount);
+        economyManager.addDollar(targetUUID, amount);
 
         scoreboardManager.updateScoreboard(player);
 
         String name = targetPlayer != null ? targetPlayer.getName() : economyManager.getPlayerName(targetUUID);
 
         player.sendMessage(Component.text("✅ Berhasil kirim ", NamedTextColor.GREEN)
-                .append(Component.text(economyManager.formatMoney(amount), NamedTextColor.GOLD, TextDecoration.BOLD))
+                .append(Component.text(economyManager.formatDollar(amount), NamedTextColor.GOLD, TextDecoration.BOLD))
                 .append(Component.text(" ke ", NamedTextColor.GREEN))
                 .append(Component.text(name, NamedTextColor.YELLOW))
                 .append(Component.text("!", NamedTextColor.GREEN)));
@@ -84,7 +84,7 @@ public class PayCommand implements CommandExecutor {
         if (targetPlayer != null && targetPlayer.isOnline()) {
             scoreboardManager.updateScoreboard(targetPlayer);
             targetPlayer.sendMessage(Component.text("🎉 Kamu dapat transfer ", NamedTextColor.GREEN)
-                    .append(Component.text(economyManager.formatMoney(amount), NamedTextColor.GOLD, TextDecoration.BOLD))
+                    .append(Component.text(economyManager.formatDollar(amount), NamedTextColor.GOLD, TextDecoration.BOLD))
                     .append(Component.text(" dari ", NamedTextColor.GREEN))
                     .append(Component.text(player.getName(), NamedTextColor.YELLOW))
                     .append(Component.text("!", NamedTextColor.GREEN)));
