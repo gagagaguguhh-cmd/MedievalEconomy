@@ -1,9 +1,9 @@
 package com.medieval.economy.managers;
 
 import com.medieval.economy.MedievalEconomyPlugin;
+import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Statistic;
@@ -51,12 +51,15 @@ public class ScoreboardManager {
         org.bukkit.scoreboard.ScoreboardManager manager = Bukkit.getScoreboardManager();
         Scoreboard board = manager.getNewScoreboard();
 
-        Component title = Component.text("🏰 ", NamedTextColor.DARK_GRAY)
-                .append(Component.text("MEDIEVAL", TextColor.color(0xd4af37), TextDecoration.BOLD))
-                .append(Component.text(" 🏰", NamedTextColor.DARK_GRAY));
+        Component title = Component.text("TUEMPEK", NamedTextColor.YELLOW, TextDecoration.BOLD);
 
         Objective obj = board.registerNewObjective("medieval_sb", Criteria.DUMMY, title);
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+        
+        // Hapus angka skor merah di ujung kanan (Paper 1.21.1 API)
+        try {
+            obj.numberFormat(NumberFormat.blank());
+        } catch (Throwable ignored) {}
 
         player.setScoreboard(board);
         updateScoreboard(player);
@@ -84,13 +87,11 @@ public class ScoreboardManager {
 
         String pingColor = ping < 80 ? "§a" : (ping < 150 ? "§e" : "§c");
 
-        obj.getScore("§7────────────────").setScore(7);
-        obj.getScore("§f👤 §e" + player.getName()).setScore(6);
-        obj.getScore("§f💵 §a" + economyManager.formatDollar(dollar)).setScore(5);
-        obj.getScore("§f🏆 §6" + economyManager.formatGold(gold)).setScore(4);
-        obj.getScore("§f⏱ §b" + playtime).setScore(3);
-        obj.getScore("§f📶 " + pingColor + ping + " ms").setScore(2);
-        obj.getScore("§8────────────────").setScore(1);
+        obj.getScore("§fPemain: §e" + player.getName()).setScore(5);
+        obj.getScore("§fDollar: §a" + economyManager.formatDollar(dollar)).setScore(4);
+        obj.getScore("§fGold: §6" + economyManager.formatGold(gold)).setScore(3);
+        obj.getScore("§fMain: §b" + playtime).setScore(2);
+        obj.getScore("§fPing: " + pingColor + ping + "ms").setScore(1);
     }
 
     private void updateAllPlaytimes() {
