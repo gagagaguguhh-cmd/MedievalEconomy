@@ -44,25 +44,26 @@ public class AkunCommand implements CommandExecutor {
             headMeta.setOwningPlayer(player);
             headMeta.displayName(Component.text("👤 " + player.getName(), NamedTextColor.GOLD, TextDecoration.BOLD));
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
             lore.add(Component.text("📅 Bergabung: ", NamedTextColor.GRAY).append(Component.text(economyManager.getJoinedDate(uuid), NamedTextColor.WHITE)));
-            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
             headMeta.lore(lore);
             head.setItemMeta(headMeta);
         }
         gui.setItem(11, head);
 
-        // Panel Keuangan
-        ItemStack money = new ItemStack(Material.GOLD_INGOT);
+        // Panel Keuangan (Dollar & Gold)
+        ItemStack money = new ItemStack(Material.EMERALD);
         ItemMeta moneyMeta = money.getItemMeta();
         if (moneyMeta != null) {
             moneyMeta.displayName(Component.text("💰 Saldo & Keuangan", NamedTextColor.YELLOW, TextDecoration.BOLD));
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
-            lore.add(Component.text("💵 Uang Sekarang: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatMoney(economyManager.getBalance(uuid)), NamedTextColor.GOLD, TextDecoration.BOLD)));
-            lore.add(Component.text("📈 Total Hasil Kerja: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatMoney(economyManager.getTotalEarned(uuid)), NamedTextColor.GREEN)));
-            lore.add(Component.text("📉 Total Pengeluaran: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatMoney(economyManager.getTotalSpent(uuid)), NamedTextColor.RED)));
-            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+            lore.add(Component.text("💵 Dollar ($): ", NamedTextColor.GRAY).append(Component.text(economyManager.formatDollar(economyManager.getDollar(uuid)), NamedTextColor.YELLOW, TextDecoration.BOLD)));
+            lore.add(Component.text("🏆 Gold: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatGold(economyManager.getGold(uuid)), NamedTextColor.GOLD, TextDecoration.BOLD)));
+            lore.add(Component.text("📈 Total Pendapatan: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatDollar(economyManager.getTotalEarnedDollar(uuid)), NamedTextColor.GREEN)));
+            lore.add(Component.text("📉 Total Pengeluaran: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatDollar(economyManager.getTotalSpentDollar(uuid)), NamedTextColor.RED)));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
             moneyMeta.lore(lore);
             money.setItemMeta(moneyMeta);
         }
@@ -74,16 +75,16 @@ public class AkunCommand implements CommandExecutor {
         if (statsMeta != null) {
             statsMeta.displayName(Component.text("📊 Statistik Perdagangan", NamedTextColor.AQUA, TextDecoration.BOLD));
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
             lore.add(Component.text("📦 Barang Dijual: ", NamedTextColor.GRAY).append(Component.text(economyManager.getItemsSold(uuid) + " item", NamedTextColor.GREEN)));
             lore.add(Component.text("🛒 Barang Dibeli: ", NamedTextColor.GRAY).append(Component.text(economyManager.getItemsBought(uuid) + " item", NamedTextColor.AQUA)));
-            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
             statsMeta.lore(lore);
             stats.setItemMeta(statsMeta);
         }
         gui.setItem(15, stats);
 
-        // Decorate background with grey glass panes
+        // Decorate background
         ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
         if (fillerMeta != null) {
