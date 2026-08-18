@@ -13,6 +13,7 @@ public class MedievalEconomyPlugin extends JavaPlugin {
     private SellManager sellManager;
     private AuctionManager auctionManager;
     private ScoreboardManager scoreboardManager;
+    private SettingsManager settingsManager;
 
     @Override
     public void onEnable() {
@@ -22,6 +23,7 @@ public class MedievalEconomyPlugin extends JavaPlugin {
         this.sellManager = new SellManager();
         this.auctionManager = new AuctionManager(this);
         this.scoreboardManager = new ScoreboardManager(this, economyManager);
+        this.settingsManager = new SettingsManager(this);
 
         // Register commands
         getCommand("balance").setExecutor(new BalanceCommand(economyManager));
@@ -30,13 +32,13 @@ public class MedievalEconomyPlugin extends JavaPlugin {
         getCommand("shop").setExecutor(new ShopCommand(shopManager, economyManager));
         getCommand("sell").setExecutor(new SellCommand());
         getCommand("auctions").setExecutor(new AuctionsCommand(auctionManager, economyManager));
-        getCommand("settings").setExecutor(new SettingsCommand(scoreboardManager));
+        getCommand("settings").setExecutor(new SettingsCommand(scoreboardManager, settingsManager));
 
         // Register event listeners
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(economyManager, scoreboardManager), this);
-        getServer().getPluginManager().registerEvents(new InventoryClickListener(economyManager, shopManager, sellManager, auctionManager, scoreboardManager), this);
+        getServer().getPluginManager().registerEvents(new InventoryClickListener(economyManager, shopManager, sellManager, auctionManager, scoreboardManager, settingsManager), this);
 
-        getLogger().info("MedievalEconomy plugin 1.0.0 (Scoreboard & Settings) berhasil diaktifkan!");
+        getLogger().info("MedievalEconomy plugin 1.0.0 berhasil diaktifkan!");
     }
 
     @Override
@@ -46,6 +48,9 @@ public class MedievalEconomyPlugin extends JavaPlugin {
         }
         if (economyManager != null) {
             economyManager.saveData();
+        }
+        if (settingsManager != null) {
+            settingsManager.saveSettings();
         }
         getLogger().info("MedievalEconomy plugin telah dinonaktifkan.");
     }
