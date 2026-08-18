@@ -30,3 +30,7 @@ commands:
     description: Buka pasar lelang (Auction House) antar pemain.
     aliases: [ah, lelang]
     usage: /auctions [sell <harga>]
+  settings:
+    description: Buka menu pengaturan server dan UI.
+    aliases: [setting, setelan]
+    usage: /settings
