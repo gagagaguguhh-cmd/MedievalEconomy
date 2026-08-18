@@ -35,14 +35,55 @@ public class ShopCommand implements CommandExecutor {
             return true;
         }
 
-        openShopGUI(player);
+        openShopMainMenu(player);
         return true;
     }
 
-    public void openShopGUI(Player player) {
-        Inventory gui = Bukkit.createInventory(null, 54, Component.text("🛒 Toko Server Medieval", NamedTextColor.DARK_GREEN));
+    // Menu Utama Kategori Toko
+    public void openShopMainMenu(Player player) {
+        Inventory gui = Bukkit.createInventory(null, 27, Component.text("🛒 Toko Server - Kategori", NamedTextColor.DARK_GREEN));
 
-        List<ShopManager.ShopItem> items = shopManager.getShopItems();
+        int[] slots = {10, 12, 14, 16, 22};
+        ShopManager.ShopCategory[] categories = ShopManager.ShopCategory.values();
+
+        for (int i = 0; i < categories.length && i < slots.length; i++) {
+            ShopManager.ShopCategory cat = categories[i];
+            ItemStack item = new ItemStack(cat.getIcon());
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.displayName(Component.text(cat.getDisplayName(), NamedTextColor.GOLD, TextDecoration.BOLD));
+                List<Component> lore = new ArrayList<>();
+                lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+                lore.add(Component.text(cat.getDescription(), NamedTextColor.YELLOW));
+                lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+                lore.add(Component.text("👉 Klik untuk membuka kategori ini!", NamedTextColor.GREEN, TextDecoration.ITALIC));
+                meta.lore(lore);
+                item.setItemMeta(meta);
+            }
+            gui.setItem(slots[i], item);
+        }
+
+        // Decorate background
+        ItemStack filler = new ItemStack(Material.GREEN_STAINED_GLASS_PANE);
+        ItemMeta fillerMeta = filler.getItemMeta();
+        if (fillerMeta != null) {
+            fillerMeta.displayName(Component.text(" "));
+            filler.setItemMeta(fillerMeta);
+        }
+        for (int i = 0; i < gui.getSize(); i++) {
+            if (gui.getItem(i) == null) {
+                gui.setItem(i, filler);
+            }
+        }
+
+        player.openInventory(gui);
+    }
+
+    // Sub-Menu Kategori Toko
+    public void openCategoryMenu(Player player, ShopManager.ShopCategory category) {
+        Inventory gui = Bukkit.createInventory(null, 54, Component.text("🛒 Toko: " + category.getDisplayName(), NamedTextColor.DARK_GREEN));
+
+        List<ShopManager.ShopItem> items = shopManager.getItemsByCategory(category);
         for (int i = 0; i < items.size() && i < 45; i++) {
             ShopManager.ShopItem shopItem = items.get(i);
             ItemStack item = new ItemStack(shopItem.material(), shopItem.amount());
@@ -61,6 +102,15 @@ public class ShopCommand implements CommandExecutor {
             gui.setItem(i, item);
         }
 
+        // Tombol Kembali
+        ItemStack back = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = back.getItemMeta();
+        if (backMeta != null) {
+            backMeta.displayName(Component.text("⬅️ Kembali ke Kategori Utama", NamedTextColor.RED, TextDecoration.BOLD));
+            back.setItemMeta(backMeta);
+        }
+        gui.setItem(49, back);
+
         // Decorate bottom row
         ItemStack filler = new ItemStack(Material.GREEN_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
@@ -69,7 +119,9 @@ public class ShopCommand implements CommandExecutor {
             filler.setItemMeta(fillerMeta);
         }
         for (int i = 45; i < 54; i++) {
-            gui.setItem(i, filler);
+            if (i != 49) {
+                gui.setItem(i, filler);
+            }
         }
 
         player.openInventory(gui);
