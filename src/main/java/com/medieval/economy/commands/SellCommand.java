@@ -30,33 +30,63 @@ public class SellCommand implements CommandExecutor {
     }
 
     public void openSellGUI(Player player) {
-        Inventory gui = Bukkit.createInventory(null, 36, Component.text("💰 Taruh Barang Untuk Dijual", NamedTextColor.DARK_GREEN));
+        Inventory gui = Bukkit.createInventory(null, 36, Component.text("💰 TARUH BARANG UNTUK DIJUAL", NamedTextColor.DARK_GREEN));
 
-        // Tombol Konfirmasi Jual di slot 31
+        // Tombol Masukkan Semua Barang (Slot 29)
+        ItemStack addAll = new ItemStack(Material.CHEST_MINECART);
+        ItemMeta addAllMeta = addAll.getItemMeta();
+        if (addAllMeta != null) {
+            addAllMeta.displayName(Component.text("📥 MASUKKAN SEMUA BARANG", NamedTextColor.AQUA, TextDecoration.BOLD));
+            List<Component> lore = new ArrayList<>();
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+            lore.add(Component.text("Otomatis memindahkan semua barang yang", NamedTextColor.YELLOW));
+            lore.add(Component.text("bisa dijual dari tas kamu ke GUI ini!", NamedTextColor.YELLOW));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+            addAllMeta.lore(lore);
+            addAll.setItemMeta(addAllMeta);
+        }
+        gui.setItem(29, addAll);
+
+        // Tombol Konfirmasi Jual (Slot 31)
         ItemStack confirm = new ItemStack(Material.EMERALD_BLOCK);
         ItemMeta confirmMeta = confirm.getItemMeta();
         if (confirmMeta != null) {
-            confirmMeta.displayName(Component.text("✅ KLIK UNTUK JUAL BARANG", NamedTextColor.GREEN, TextDecoration.BOLD));
+            confirmMeta.displayName(Component.text("✅ PROSES PENJUALAN", NamedTextColor.GREEN, TextDecoration.BOLD));
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
-            lore.add(Component.text("Taruh item yang mau kamu jual ke GUI ini,", NamedTextColor.YELLOW));
-            lore.add(Component.text("lalu klik tombol ini untuk memproses penjualan!", NamedTextColor.YELLOW));
-            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+            lore.add(Component.text("Klik untuk memproses dan menjual", NamedTextColor.YELLOW));
+            lore.add(Component.text("semua barang yang ada di GUI ini!", NamedTextColor.YELLOW));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
             confirmMeta.lore(lore);
             confirm.setItemMeta(confirmMeta);
         }
         gui.setItem(31, confirm);
 
-        // Decorate bottom row
-        ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-        ItemMeta fillerMeta = filler.getItemMeta();
-        if (fillerMeta != null) {
-            fillerMeta.displayName(Component.text(" "));
-            filler.setItemMeta(fillerMeta);
+        // Tombol Kembalikan Semua Barang (Slot 33)
+        ItemStack removeAll = new ItemStack(Material.HOPPER);
+        ItemMeta removeAllMeta = removeAll.getItemMeta();
+        if (removeAllMeta != null) {
+            removeAllMeta.displayName(Component.text("📤 KOSONGKAN / KEMBALIKAN", NamedTextColor.RED, TextDecoration.BOLD));
+            List<Component> lore = new ArrayList<>();
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+            lore.add(Component.text("Kembalikan semua item dari GUI", NamedTextColor.YELLOW));
+            lore.add(Component.text("ke dalam tas inventory kamu!", NamedTextColor.YELLOW));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+            removeAllMeta.lore(lore);
+            removeAll.setItemMeta(removeAllMeta);
+        }
+        gui.setItem(33, removeAll);
+
+        // Bingkai bawah GUI
+        ItemStack border = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = border.getItemMeta();
+        if (borderMeta != null) {
+            borderMeta.displayName(Component.text(" "));
+            border.setItemMeta(borderMeta);
         }
         for (int i = 27; i < 36; i++) {
-            if (i != 31) {
-                gui.setItem(i, filler);
+            if (i != 29 && i != 31 && i != 33) {
+                gui.setItem(i, border);
             }
         }
 
