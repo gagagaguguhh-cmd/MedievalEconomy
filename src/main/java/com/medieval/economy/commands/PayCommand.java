@@ -1,6 +1,7 @@
 package com.medieval.economy.commands;
 
 import com.medieval.economy.managers.EconomyManager;
+import com.medieval.economy.managers.ScoreboardManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -15,9 +16,11 @@ import java.util.UUID;
 public class PayCommand implements CommandExecutor {
 
     private final EconomyManager economyManager;
+    private final ScoreboardManager scoreboardManager;
 
-    public PayCommand(EconomyManager economyManager) {
+    public PayCommand(EconomyManager economyManager, ScoreboardManager scoreboardManager) {
         this.economyManager = economyManager;
+        this.scoreboardManager = scoreboardManager;
     }
 
     @Override
@@ -68,6 +71,8 @@ public class PayCommand implements CommandExecutor {
         economyManager.withdrawBalance(player.getUniqueId(), amount);
         economyManager.addBalance(targetUUID, amount);
 
+        scoreboardManager.updateScoreboard(player);
+
         String name = targetPlayer != null ? targetPlayer.getName() : economyManager.getPlayerName(targetUUID);
 
         player.sendMessage(Component.text("✅ Berhasil kirim ", NamedTextColor.GREEN)
@@ -77,6 +82,7 @@ public class PayCommand implements CommandExecutor {
                 .append(Component.text("!", NamedTextColor.GREEN)));
 
         if (targetPlayer != null && targetPlayer.isOnline()) {
+            scoreboardManager.updateScoreboard(targetPlayer);
             targetPlayer.sendMessage(Component.text("🎉 Kamu dapat transfer ", NamedTextColor.GREEN)
                     .append(Component.text(economyManager.formatMoney(amount), NamedTextColor.GOLD, TextDecoration.BOLD))
                     .append(Component.text(" dari ", NamedTextColor.GREEN))
