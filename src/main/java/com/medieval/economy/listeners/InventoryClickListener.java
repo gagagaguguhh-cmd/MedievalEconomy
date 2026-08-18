@@ -1,6 +1,5 @@
 package com.medieval.economy.listeners;
 
-import com.medieval.economy.commands.AuctionsCommand;
 import com.medieval.economy.commands.ShopCommand;
 import com.medieval.economy.commands.SettingsCommand;
 import com.medieval.economy.managers.*;
@@ -80,16 +79,16 @@ public class InventoryClickListener implements Listener {
         }
 
         // 3. Toko Server - Kategori Utama
-        if (title.equals("🛒 Toko Server - Kategori")) {
+        if (title.equals("🏰 TOKO KERAJAAN - KATEGORI")) {
             event.setCancelled(true);
             int slot = event.getSlot();
             ShopManager.ShopCategory selectedCategory = null;
 
-            if (slot == 10) selectedCategory = ShopManager.ShopCategory.FOOD;
-            else if (slot == 12) selectedCategory = ShopManager.ShopCategory.BUILDING;
-            else if (slot == 14) selectedCategory = ShopManager.ShopCategory.MINING;
-            else if (slot == 16) selectedCategory = ShopManager.ShopCategory.EQUIPMENT;
-            else if (slot == 22) selectedCategory = ShopManager.ShopCategory.MAGIC;
+            if (slot == 11) selectedCategory = ShopManager.ShopCategory.FOOD;
+            else if (slot == 13) selectedCategory = ShopManager.ShopCategory.BUILDING;
+            else if (slot == 15) selectedCategory = ShopManager.ShopCategory.MINING;
+            else if (slot == 20) selectedCategory = ShopManager.ShopCategory.EQUIPMENT;
+            else if (slot == 24) selectedCategory = ShopManager.ShopCategory.MAGIC;
 
             if (selectedCategory != null) {
                 player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.2f);
@@ -99,7 +98,7 @@ public class InventoryClickListener implements Listener {
         }
 
         // 4. Sub-Menu Toko Kategori
-        if (title.startsWith("🛒 Toko: ")) {
+        if (title.startsWith("🛒 Kategori: ")) {
             event.setCancelled(true);
             int slot = event.getSlot();
 
@@ -119,20 +118,68 @@ public class InventoryClickListener implements Listener {
 
             if (matchedCategory != null) {
                 List<ShopManager.ShopItem> categoryItems = shopManager.getItemsByCategory(matchedCategory);
-                if (slot >= 0 && slot < categoryItems.size()) {
-                    ShopManager.ShopItem shopItem = categoryItems.get(slot);
-                    double price = shopItem.buyPrice();
+                int[] itemSlots = {
+                    10, 11, 12, 13, 14, 15, 16,
+                    19, 20, 21, 22, 23, 24, 25,
+                    28, 29, 30, 31, 32, 33, 34
+                };
 
-                    if (!economyManager.hasBalance(player.getUniqueId(), price)) {
+                for (int i = 0; i < itemSlots.length && i < categoryItems.size(); i++) {
+                    if (slot == itemSlots[i]) {
+                        ShopManager.ShopItem shopItem = categoryItems.get(i);
+                        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.2f);
+                        new ShopCommand(shopManager, economyManager).openQuantityMenu(player, shopItem);
+                        return;
+                    }
+                }
+            }
+            return;
+        }
+
+        // 5. GUI Pilihan Jumlah Pembelian (/shop)
+        if (title.startsWith("📦 Beli: ")) {
+            event.setCancelled(true);
+            int slot = event.getSlot();
+
+            if (slot == 22) { // Batal
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 0.8f);
+                new ShopCommand(shopManager, economyManager).openShopMainMenu(player);
+                return;
+            }
+
+            String itemName = title.substring(9);
+            ShopManager.ShopItem targetItem = null;
+
+            for (ShopManager.ShopCategory cat : ShopManager.ShopCategory.values()) {
+                for (ShopManager.ShopItem item : shopManager.getItemsByCategory(cat)) {
+                    if (item.displayName().equalsIgnoreCase(itemName)) {
+                        targetItem = item;
+                        break;
+                    }
+                }
+                if (targetItem != null) break;
+            }
+
+            if (targetItem != null) {
+                int qty = 0;
+                if (slot == 10) qty = 1;
+                else if (slot == 12) qty = 16;
+                else if (slot == 14) qty = 32;
+                else if (slot == 16) qty = 64;
+
+                if (qty > 0) {
+                    double totalPrice = targetItem.buyPrice() * qty;
+
+                    if (!economyManager.hasBalance(player.getUniqueId(), totalPrice)) {
                         player.sendMessage(Component.text("❌ Uang kamu gak cukup buat beli ", NamedTextColor.RED)
-                                .append(Component.text(shopItem.displayName(), NamedTextColor.YELLOW))
+                                .append(Component.text(qty + "x " + targetItem.displayName(), NamedTextColor.YELLOW))
                                 .append(Component.text("! Butuh ", NamedTextColor.RED))
-                                .append(Component.text(economyManager.formatMoney(price), NamedTextColor.GOLD)));
+                                .append(Component.text(economyManager.formatMoney(totalPrice), NamedTextColor.GOLD)));
                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                         return;
                     }
 
-                    ItemStack buyItem = new ItemStack(shopItem.material(), shopItem.amount());
+                    ItemStack buyItem = new ItemStack(targetItem.material(), qty);
                     HashMap<Integer, ItemStack> overflow = player.getInventory().addItem(buyItem);
                     if (!overflow.isEmpty()) {
                         player.sendMessage(Component.text("❌ Tas/Inventory kamu penuh! Kosongkan slot dulu.", NamedTextColor.RED));
@@ -140,23 +187,24 @@ public class InventoryClickListener implements Listener {
                         return;
                     }
 
-                    economyManager.withdrawBalance(player.getUniqueId(), price);
-                    economyManager.addItemsBought(player.getUniqueId(), shopItem.amount());
+                    economyManager.withdrawBalance(player.getUniqueId(), totalPrice);
+                    economyManager.addItemsBought(player.getUniqueId(), qty);
                     scoreboardManager.updateScoreboard(player);
 
                     player.sendMessage(Component.text("🎉 Berhasil membeli ", NamedTextColor.GREEN)
-                            .append(Component.text(shopItem.amount() + "x " + shopItem.displayName(), NamedTextColor.YELLOW))
+                            .append(Component.text(qty + "x " + targetItem.displayName(), NamedTextColor.YELLOW))
                             .append(Component.text(" seharga ", NamedTextColor.GREEN))
-                            .append(Component.text(economyManager.formatMoney(price), NamedTextColor.GOLD, TextDecoration.BOLD))
+                            .append(Component.text(economyManager.formatMoney(totalPrice), NamedTextColor.GOLD, TextDecoration.BOLD))
                             .append(Component.text("!", NamedTextColor.GREEN)));
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
                     player.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 1.5f);
+                    player.closeInventory();
                 }
             }
             return;
         }
 
-        // 5. Konfirmasi Penjualan Barang GUI (/sell)
+        // 6. Konfirmasi Penjualan Barang GUI (/sell)
         if (title.contains("📝 Konfirmasi Penjualan Barang")) {
             event.setCancelled(true);
             int slot = event.getSlot();
@@ -208,25 +256,76 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
-        // 6. Taruh Barang Untuk Dijual (/sell)
-        if (title.contains("Taruh Barang Untuk Dijual")) {
+        // 7. Taruh Barang Untuk Dijual (/sell)
+        if (title.contains("TARUH BARANG UNTUK DIJUAL")) {
             int slot = event.getRawSlot();
             if (slot >= 27 && slot < 36) {
                 event.setCancelled(true);
 
-                if (slot == 31) {
-                    processSellGUI(player, event.getView().getTopInventory());
+                Inventory topInv = event.getView().getTopInventory();
+
+                if (slot == 29) { // Masukkan Semua Barang dari Tas Player
+                    int addedCount = 0;
+                    ItemStack[] pInv = player.getInventory().getContents();
+                    for (int i = 0; i < pInv.length; i++) {
+                        ItemStack pItem = pInv[i];
+                        if (pItem != null && !pItem.getType().isAir()) {
+                            if (sellManager.isSellable(pItem.getType())) {
+                                HashMap<Integer, ItemStack> overflow = topInv.addItem(pItem.clone());
+                                if (overflow.isEmpty()) {
+                                    player.getInventory().setItem(i, null);
+                                    addedCount += pItem.getAmount();
+                                } else {
+                                    int remaining = overflow.values().iterator().next().getAmount();
+                                    int moved = pItem.getAmount() - remaining;
+                                    pItem.setAmount(remaining);
+                                    addedCount += moved;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (addedCount > 0) {
+                        player.sendMessage(Component.text("📥 Berhasil memindahkan " + addedCount + " item dari tas ke GUI!", NamedTextColor.AQUA));
+                        player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_GENERIC, 1.0f, 1.2f);
+                    } else {
+                        player.sendMessage(Component.text("⚠️ Tidak ada item di tas kamu yang bisa dijual atau GUI sudah penuh!", NamedTextColor.YELLOW));
+                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    }
+                } else if (slot == 31) { // Proses Penjualan
+                    processSellGUI(player, topInv);
+                } else if (slot == 33) { // Kosongkan / Kembalikan Semua Barang ke Tas Player
+                    int returnedCount = 0;
+                    for (int i = 0; i < 27; i++) {
+                        ItemStack item = topInv.getItem(i);
+                        if (item != null && !item.getType().isAir()) {
+                            HashMap<Integer, ItemStack> overflow = player.getInventory().addItem(item);
+                            if (overflow.isEmpty()) {
+                                topInv.setItem(i, null);
+                                returnedCount += item.getAmount();
+                            } else {
+                                int remaining = overflow.values().iterator().next().getAmount();
+                                int moved = item.getAmount() - remaining;
+                                item.setAmount(remaining);
+                                returnedCount += moved;
+                                break;
+                            }
+                        }
+                    }
+                    if (returnedCount > 0) {
+                        player.sendMessage(Component.text("📤 Berhasil mengembalikan " + returnedCount + " item ke tas kamu!", NamedTextColor.YELLOW));
+                        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+                    }
                 }
             }
             return;
         }
 
-        // 7. Pasar Lelang (/auctions)
+        // 8. Pasar Lelang (/auctions)
         if (title.contains("⚖️ Lelang [")) {
             event.setCancelled(true);
             int slot = event.getSlot();
 
-            // Ekstrak Kategori & Halaman dari judul
             AuctionManager.AuctionCategory cat = AuctionManager.AuctionCategory.ALL;
             int currentPage = 1;
             try {
@@ -240,30 +339,27 @@ public class InventoryClickListener implements Listener {
             int itemsPerPage = 36;
             int maxPages = Math.max(1, (int) Math.ceil((double) categoryListings.size() / itemsPerPage));
 
-            // Klik Kategori Filter (Slot 36 - 40)
             if (slot >= 36 && slot <= 40) {
                 int catIndex = slot - 36;
                 AuctionManager.AuctionCategory[] cats = AuctionManager.AuctionCategory.values();
                 if (catIndex < cats.length) {
                     player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.2f);
-                    new AuctionsCommand(auctionManager, economyManager).openAuctionGUI(player, cats[catIndex], 1);
+                    new com.medieval.economy.commands.AuctionsCommand(auctionManager, economyManager).openAuctionGUI(player, cats[catIndex], 1);
                 }
                 return;
             }
 
-            // Navigasi Halaman
-            if (slot == 48 && currentPage > 1) { // Prev
+            if (slot == 48 && currentPage > 1) {
                 player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 0.9f);
-                new AuctionsCommand(auctionManager, economyManager).openAuctionGUI(player, cat, currentPage - 1);
+                new com.medieval.economy.commands.AuctionsCommand(auctionManager, economyManager).openAuctionGUI(player, cat, currentPage - 1);
                 return;
             }
-            if (slot == 50 && currentPage < maxPages) { // Next
+            if (slot == 50 && currentPage < maxPages) {
                 player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.1f);
-                new AuctionsCommand(auctionManager, economyManager).openAuctionGUI(player, cat, currentPage + 1);
+                new com.medieval.economy.commands.AuctionsCommand(auctionManager, economyManager).openAuctionGUI(player, cat, currentPage + 1);
                 return;
             }
 
-            // Klik Item Lelang
             if (slot >= 0 && slot < 36) {
                 int actualIndex = ((currentPage - 1) * itemsPerPage) + slot;
                 if (actualIndex < categoryListings.size()) {
@@ -383,10 +479,10 @@ public class InventoryClickListener implements Listener {
         if (agreeMeta != null) {
             agreeMeta.displayName(Component.text("✅ SETUJU JUAL", NamedTextColor.GREEN, TextDecoration.BOLD));
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
             lore.add(Component.text("📦 Total Item: ", NamedTextColor.GRAY).append(Component.text(itemCount + " item", NamedTextColor.WHITE)));
             lore.add(Component.text("💵 Estimasi Uang: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatMoney(totalMoney), NamedTextColor.GOLD, TextDecoration.BOLD)));
-            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
             lore.add(Component.text("👉 Klik untuk memproses penjualan!", NamedTextColor.GREEN, TextDecoration.ITALIC));
             agreeMeta.lore(lore);
             agree.setItemMeta(agreeMeta);
@@ -398,10 +494,10 @@ public class InventoryClickListener implements Listener {
         if (cancelMeta != null) {
             cancelMeta.displayName(Component.text("❌ BATALKAN", NamedTextColor.RED, TextDecoration.BOLD));
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
             lore.add(Component.text("Klik untuk membatalkan dan mengambil", NamedTextColor.YELLOW));
             lore.add(Component.text("kembali semua item kamu.", NamedTextColor.YELLOW));
-            lore.add(Component.text("-----------------------", NamedTextColor.GRAY));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
             cancelMeta.lore(lore);
             cancel.setItemMeta(cancelMeta);
         }
@@ -427,7 +523,7 @@ public class InventoryClickListener implements Listener {
         if (event.getView().title() == null) return;
         String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
 
-        if (title.contains("Taruh Barang Untuk Dijual")) {
+        if (title.contains("TARUH BARANG UNTUK DIJUAL")) {
             Player player = (Player) event.getPlayer();
             Inventory inv = event.getInventory();
 
