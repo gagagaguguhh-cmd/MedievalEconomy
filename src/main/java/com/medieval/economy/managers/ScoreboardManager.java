@@ -24,7 +24,6 @@ public class ScoreboardManager {
         this.plugin = plugin;
         this.economyManager = economyManager;
         
-        // Task periodic setiap 20 tick (1 detik) khusus untuk update Waktu Bermain (Playtime)
         Bukkit.getScheduler().runTaskTimer(plugin, this::updateAllPlaytimes, 20L, 20L);
     }
 
@@ -52,7 +51,6 @@ public class ScoreboardManager {
         org.bukkit.scoreboard.ScoreboardManager manager = Bukkit.getScoreboardManager();
         Scoreboard board = manager.getNewScoreboard();
 
-        // Judul Compact: MEDIEVAL
         Component title = Component.text("⛏ ", NamedTextColor.DARK_GRAY)
                 .append(Component.text("MEDIEVAL", TextColor.color(0xaaaaaa), TextDecoration.BOLD))
                 .append(Component.text(" ⛏", NamedTextColor.DARK_GRAY));
@@ -74,19 +72,19 @@ public class ScoreboardManager {
             return;
         }
 
-        // Hapus entri lama
         for (String entry : board.getEntries()) {
             board.resetScores(entry);
         }
 
         UUID uuid = player.getUniqueId();
-        double balance = economyManager.getBalance(uuid);
+        double dollar = economyManager.getDollar(uuid);
+        double gold = economyManager.getGold(uuid);
         String playtime = formatPlaytime(player);
 
-        // Tampilan Compact & Minimalis (Hemat tempat di Layar HP/Mobile)
-        obj.getScore("§7--------------").setScore(5);
-        obj.getScore("§f👤 §e" + player.getName()).setScore(4);
-        obj.getScore("§f💰 §6" + economyManager.formatMoney(balance)).setScore(3);
+        obj.getScore("§7--------------").setScore(6);
+        obj.getScore("§f👤 §e" + player.getName()).setScore(5);
+        obj.getScore("§f💵 §a" + economyManager.formatDollar(dollar)).setScore(4);
+        obj.getScore("§f🏆 §6" + economyManager.formatGold(gold)).setScore(3);
         obj.getScore("§f⏱ §b" + playtime).setScore(2);
         obj.getScore("§8--------------").setScore(1);
     }
