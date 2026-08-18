@@ -68,7 +68,7 @@ public class AuctionsCommand implements CommandExecutor {
             player.sendMessage(Component.text("🎉 Berhasil mendaftarkan ", NamedTextColor.GREEN)
                     .append(Component.text(toSell.getAmount() + "x " + toSell.getType().name(), NamedTextColor.YELLOW))
                     .append(Component.text(" ke lelang dengan harga ", NamedTextColor.GREEN))
-                    .append(Component.text(economyManager.formatMoney(price), NamedTextColor.GOLD, TextDecoration.BOLD))
+                    .append(Component.text(economyManager.formatDollar(price), NamedTextColor.GOLD, TextDecoration.BOLD))
                     .append(Component.text("! (ID: " + listing.id() + ")", NamedTextColor.GRAY)));
 
             return true;
@@ -96,11 +96,11 @@ public class AuctionsCommand implements CommandExecutor {
             if (meta != null) {
                 List<Component> lore = meta.hasLore() && meta.lore() != null ? new ArrayList<>(meta.lore()) : new ArrayList<>();
                 lore.add(Component.text(" ", NamedTextColor.WHITE));
-                lore.add(Component.text("-----------------------", NamedTextColor.DARK_GRAY));
+                lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
                 lore.add(Component.text("👤 Penjual: ", NamedTextColor.GRAY).append(Component.text(listing.sellerName(), NamedTextColor.YELLOW)));
-                lore.add(Component.text("💵 Harga: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatMoney(listing.price()), NamedTextColor.GOLD, TextDecoration.BOLD)));
+                lore.add(Component.text("💵 Harga: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatDollar(listing.price()), NamedTextColor.GOLD, TextDecoration.BOLD)));
                 lore.add(Component.text("🆔 ID Lelang: ", NamedTextColor.DARK_GRAY).append(Component.text(listing.id(), NamedTextColor.GRAY)));
-                lore.add(Component.text("-----------------------", NamedTextColor.DARK_GRAY));
+                lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
                 if (listing.sellerUUID().equals(player.getUniqueId())) {
                     lore.add(Component.text("👉 Klik kiri untuk MEMBATALKAN & mengambil item!", NamedTextColor.RED, TextDecoration.ITALIC));
                 } else {
@@ -112,7 +112,6 @@ public class AuctionsCommand implements CommandExecutor {
             gui.setItem(i - startIndex, displayItem);
         }
 
-        // Row 5: Kategori Filter (Slots 36 - 40)
         int catSlot = 36;
         for (AuctionManager.AuctionCategory cat : AuctionManager.AuctionCategory.values()) {
             ItemStack catItem = new ItemStack(cat.getIcon());
@@ -129,7 +128,6 @@ public class AuctionsCommand implements CommandExecutor {
             gui.setItem(catSlot++, catItem);
         }
 
-        // Row 6: Navigasi Halaman
         if (currentPage > 1) {
             ItemStack prev = new ItemStack(Material.ARROW);
             ItemMeta prevMeta = prev.getItemMeta();
@@ -158,7 +156,6 @@ public class AuctionsCommand implements CommandExecutor {
             gui.setItem(50, next);
         }
 
-        // Decorate filler
         ItemStack filler = new ItemStack(Material.PURPLE_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
         if (fillerMeta != null) {
