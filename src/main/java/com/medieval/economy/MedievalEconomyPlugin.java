@@ -3,7 +3,9 @@ package com.medieval.economy;
 import com.medieval.economy.commands.*;
 import com.medieval.economy.listeners.CommandBlockerListener;
 import com.medieval.economy.listeners.InventoryClickListener;
+import com.medieval.economy.listeners.MonsterToggleListener;
 import com.medieval.economy.listeners.PlayerJoinListener;
+import com.medieval.economy.listeners.RTPDimensionUnlockListener;
 import com.medieval.economy.managers.*;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -16,6 +18,7 @@ public class MedievalEconomyPlugin extends JavaPlugin {
     private OrderManager orderManager;
     private ScoreboardManager scoreboardManager;
     private SettingsManager settingsManager;
+    private RTPManager rtpManager;
 
     @Override
     public void onEnable() {
@@ -27,6 +30,7 @@ public class MedievalEconomyPlugin extends JavaPlugin {
         this.orderManager = new OrderManager(this);
         this.scoreboardManager = new ScoreboardManager(this, economyManager);
         this.settingsManager = new SettingsManager(this);
+        this.rtpManager = new RTPManager(this);
 
         // Register commands
         getCommand("balance").setExecutor(new BalanceCommand(economyManager));
@@ -37,14 +41,16 @@ public class MedievalEconomyPlugin extends JavaPlugin {
         getCommand("auctions").setExecutor(new AuctionsCommand(auctionManager, economyManager));
         getCommand("order").setExecutor(new OrderCommand(orderManager, economyManager));
         getCommand("settings").setExecutor(new SettingsCommand(scoreboardManager, settingsManager));
+        getCommand("rtp").setExecutor(new RTPCommand(this, rtpManager));
 
         // Register event listeners
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(economyManager, scoreboardManager), this);
         getServer().getPluginManager().registerEvents(new InventoryClickListener(economyManager, shopManager, sellManager, auctionManager, orderManager, scoreboardManager, settingsManager), this);
-        getServer().getPluginManager().registerEvents(new com.medieval.economy.listeners.MonsterToggleListener(settingsManager), this);
+        getServer().getPluginManager().registerEvents(new MonsterToggleListener(settingsManager), this);
+        getServer().getPluginManager().registerEvents(new RTPDimensionUnlockListener(rtpManager), this);
         getServer().getPluginManager().registerEvents(new CommandBlockerListener(), this);
 
-        getLogger().info("MedievalEconomy plugin 1.0.0 (Command Blocker & UI) berhasil diaktifkan!");
+        getLogger().info("MedievalEconomy plugin 1.0.0 (Command Blocker & UI & RTP) berhasil diaktifkan!");
     }
 
     @Override
@@ -60,6 +66,9 @@ public class MedievalEconomyPlugin extends JavaPlugin {
         }
         if (settingsManager != null) {
             settingsManager.saveSettings();
+        }
+        if (rtpManager != null) {
+            rtpManager.saveData();
         }
         getLogger().info("MedievalEconomy plugin telah dinonaktifkan.");
     }

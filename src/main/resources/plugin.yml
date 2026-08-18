@@ -38,3 +38,6 @@ commands:
     description: Buka menu pengaturan server dan UI.
     aliases: [setting, setelan]
     usage: /settings
+  rtp:
+    description: Teleportasi acak ke lokasi aman di dunia.
+    usage: /rtp
