@@ -1,7 +1,9 @@
 package com.medieval.economy.listeners;
 
+import com.medieval.economy.commands.SettingsCommand;
 import com.medieval.economy.managers.AuctionManager;
 import com.medieval.economy.managers.EconomyManager;
+import com.medieval.economy.managers.ScoreboardManager;
 import com.medieval.economy.managers.SellManager;
 import com.medieval.economy.managers.ShopManager;
 import net.kyori.adventure.text.Component;
@@ -18,11 +20,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class InventoryClickListener implements Listener {
 
@@ -30,12 +30,14 @@ public class InventoryClickListener implements Listener {
     private final ShopManager shopManager;
     private final SellManager sellManager;
     private final AuctionManager auctionManager;
+    private final ScoreboardManager scoreboardManager;
 
-    public InventoryClickListener(EconomyManager economyManager, ShopManager shopManager, SellManager sellManager, AuctionManager auctionManager) {
+    public InventoryClickListener(EconomyManager economyManager, ShopManager shopManager, SellManager sellManager, AuctionManager auctionManager, ScoreboardManager scoreboardManager) {
         this.economyManager = economyManager;
         this.shopManager = shopManager;
         this.sellManager = sellManager;
         this.auctionManager = auctionManager;
+        this.scoreboardManager = scoreboardManager;
     }
 
     @EventHandler
@@ -51,7 +53,27 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
-        // 2. Toko Server
+        // 2. Pengaturan Server & UI (/settings)
+        if (title.contains("Pengaturan Server & UI")) {
+            event.setCancelled(true);
+            int slot = event.getSlot();
+            if (slot == 13) {
+                boolean current = scoreboardManager.isEnabled(player.getUniqueId());
+                boolean next = !current;
+                scoreboardManager.setEnabled(player.getUniqueId(), next);
+
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                player.sendMessage(Component.text("⚙️ Panel layar kanan (Scoreboard) sekarang ", NamedTextColor.YELLOW)
+                        .append(next ? Component.text("DITAMPILKAN ✅", NamedTextColor.GREEN, TextDecoration.BOLD)
+                                     : Component.text("DISEMBUNYIKAN ❌", NamedTextColor.RED, TextDecoration.BOLD)));
+
+                // Re-open GUI untuk refresh ikon
+                new SettingsCommand(scoreboardManager).openSettingsGUI(player);
+            }
+            return;
+        }
+
+        // 3. Toko Server
         if (title.contains("Toko Server Medieval")) {
             event.setCancelled(true);
             ItemStack clicked = event.getCurrentItem();
@@ -72,7 +94,6 @@ public class InventoryClickListener implements Listener {
                     return;
                 }
 
-                // Cek slot inventaris player cukup
                 ItemStack buyItem = new ItemStack(shopItem.material(), shopItem.amount());
                 HashMap<Integer, ItemStack> overflow = player.getInventory().addItem(buyItem);
                 if (!overflow.isEmpty()) {
@@ -83,6 +104,7 @@ public class InventoryClickListener implements Listener {
 
                 economyManager.withdrawBalance(player.getUniqueId(), price);
                 economyManager.addItemsBought(player.getUniqueId(), shopItem.amount());
+                scoreboardManager.updateScoreboard(player);
 
                 player.sendMessage(Component.text("🎉 Berhasil membeli ", NamedTextColor.GREEN)
                         .append(Component.text(shopItem.amount() + "x " + shopItem.displayName(), NamedTextColor.YELLOW))
@@ -94,14 +116,13 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
-        // 3. Taruh Barang Untuk Dijual (/sell)
+        // 4. Taruh Barang Untuk Dijual (/sell)
         if (title.contains("Taruh Barang Untuk Dijual")) {
             int slot = event.getRawSlot();
-            // Batasi interaksi di slot konfirmasi dan filler bawah GUI
             if (slot >= 27 && slot < 36) {
                 event.setCancelled(true);
 
-                if (slot == 31) { // Tombol Emerald Konfirmasi Jual
+                if (slot == 31) {
                     Inventory topInv = event.getView().getTopInventory();
                     double totalMoney = 0.0;
                     int totalItemsCount = 0;
@@ -126,6 +147,7 @@ public class InventoryClickListener implements Listener {
                     if (totalItemsCount > 0) {
                         economyManager.addBalance(player.getUniqueId(), totalMoney);
                         economyManager.addItemsSold(player.getUniqueId(), totalItemsCount);
+                        scoreboardManager.updateScoreboard(player);
 
                         player.sendMessage(Component.text("💰 Berhasil menjual ", NamedTextColor.GREEN)
                                 .append(Component.text(totalItemsCount + " item", NamedTextColor.YELLOW))
@@ -145,7 +167,7 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
-        // 4. Pasar Lelang (/auctions)
+        // 5. Pasar Lelang (/auctions)
         if (title.contains("Pasar Lelang Pemain")) {
             event.setCancelled(true);
             int slot = event.getSlot();
@@ -154,7 +176,6 @@ public class InventoryClickListener implements Listener {
             if (slot >= 0 && slot < listings.size()) {
                 AuctionManager.AuctionListing listing = listings.get(slot);
 
-                // Cek jika yang klik adalah pemilik barang -> batalkan lelang
                 if (listing.sellerUUID().equals(player.getUniqueId())) {
                     HashMap<Integer, ItemStack> overflow = player.getInventory().addItem(listing.item());
                     if (!overflow.isEmpty()) {
@@ -170,7 +191,6 @@ public class InventoryClickListener implements Listener {
                     return;
                 }
 
-                // Jika pembeli orang lain
                 if (!economyManager.hasBalance(player.getUniqueId(), listing.price())) {
                     player.sendMessage(Component.text("❌ Uang kamu gak cukup buat beli item lelang ini! Butuh ", NamedTextColor.RED)
                             .append(Component.text(economyManager.formatMoney(listing.price()), NamedTextColor.GOLD)));
@@ -190,6 +210,8 @@ public class InventoryClickListener implements Listener {
                 economyManager.addItemsBought(player.getUniqueId(), listing.item().getAmount());
                 economyManager.addItemsSold(listing.sellerUUID(), listing.item().getAmount());
 
+                scoreboardManager.updateScoreboard(player);
+
                 auctionManager.removeListing(listing.id());
 
                 player.sendMessage(Component.text("🎉 Berhasil membeli item lelang seharga ", NamedTextColor.GREEN)
@@ -201,6 +223,7 @@ public class InventoryClickListener implements Listener {
 
                 Player seller = Bukkit.getPlayer(listing.sellerUUID());
                 if (seller != null && seller.isOnline()) {
+                    scoreboardManager.updateScoreboard(seller);
                     seller.sendMessage(Component.text("🎉 Item lelang kamu berhasil dibeli oleh ", NamedTextColor.GREEN)
                             .append(Component.text(player.getName(), NamedTextColor.YELLOW))
                             .append(Component.text("! Kamu menerima ", NamedTextColor.GREEN))
@@ -222,7 +245,6 @@ public class InventoryClickListener implements Listener {
             Player player = (Player) event.getPlayer();
             Inventory inv = event.getInventory();
 
-            // Kembalikan sisa item di 27 slot atas yang belum terjual
             for (int i = 0; i < 27; i++) {
                 ItemStack item = inv.getItem(i);
                 if (item != null && !item.getType().isAir()) {
