@@ -1,7 +1,5 @@
 package com.medieval.economy.listeners;
 
-import com.medieval.economy.commands.AuctionsCommand;
-import com.medieval.economy.commands.OrderCommand;
 import com.medieval.economy.commands.ShopCommand;
 import com.medieval.economy.commands.SettingsCommand;
 import com.medieval.economy.managers.*;
@@ -83,7 +81,7 @@ public class InventoryClickListener implements Listener {
         }
 
         // 3. Toko Server - Kategori Utama
-        if (title.equals("🏰 TOKO KERAJAAN - KATEGORI")) {
+        if (title.equals("TOKO SERVER")) {
             event.setCancelled(true);
             int slot = event.getSlot();
             ShopManager.ShopCategory selectedCategory = null;
@@ -102,7 +100,7 @@ public class InventoryClickListener implements Listener {
         }
 
         // 4. Sub-Menu Toko Kategori
-        if (title.startsWith("🛒 Kategori: ")) {
+        if (title.startsWith("Toko: ")) {
             event.setCancelled(true);
             int slot = event.getSlot();
 
@@ -141,7 +139,7 @@ public class InventoryClickListener implements Listener {
         }
 
         // 5. GUI Pilihan Jumlah Pembelian (/shop)
-        if (title.startsWith("📦 Beli: ")) {
+        if (title.startsWith("Beli: ")) {
             event.setCancelled(true);
             int slot = event.getSlot();
 
@@ -151,7 +149,7 @@ public class InventoryClickListener implements Listener {
                 return;
             }
 
-            String itemName = title.substring(9);
+            String itemName = title.substring(6);
             ShopManager.ShopItem targetItem = null;
 
             for (ShopManager.ShopCategory cat : ShopManager.ShopCategory.values()) {
@@ -175,10 +173,8 @@ public class InventoryClickListener implements Listener {
                     double totalPrice = targetItem.buyPrice() * qty;
 
                     if (!economyManager.hasDollar(player.getUniqueId(), totalPrice)) {
-                        player.sendMessage(Component.text("❌ Uang Dollar kamu gak cukup buat beli ", NamedTextColor.RED)
-                                .append(Component.text(qty + "x " + targetItem.displayName(), NamedTextColor.YELLOW))
-                                .append(Component.text("! Butuh ", NamedTextColor.RED))
-                                .append(Component.text(economyManager.formatDollar(totalPrice), NamedTextColor.GOLD)));
+                        player.sendMessage(Component.text("❌ Uang tidak cukup! Butuh ", NamedTextColor.RED)
+                                .append(Component.text(economyManager.formatDollar(totalPrice), NamedTextColor.GREEN)));
                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                         return;
                     }
@@ -186,7 +182,7 @@ public class InventoryClickListener implements Listener {
                     ItemStack buyItem = new ItemStack(targetItem.material(), qty);
                     HashMap<Integer, ItemStack> overflow = player.getInventory().addItem(buyItem);
                     if (!overflow.isEmpty()) {
-                        player.sendMessage(Component.text("❌ Tas/Inventory kamu penuh! Kosongkan slot dulu.", NamedTextColor.RED));
+                        player.sendMessage(Component.text("❌ Inventory kamu penuh!", NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                         return;
                     }
@@ -195,11 +191,10 @@ public class InventoryClickListener implements Listener {
                     economyManager.addItemsBought(player.getUniqueId(), qty);
                     scoreboardManager.updateScoreboard(player);
 
-                    player.sendMessage(Component.text("🎉 Berhasil membeli ", NamedTextColor.GREEN)
+                    player.sendMessage(Component.text("Berhasil membeli ", NamedTextColor.GREEN)
                             .append(Component.text(qty + "x " + targetItem.displayName(), NamedTextColor.YELLOW))
                             .append(Component.text(" seharga ", NamedTextColor.GREEN))
-                            .append(Component.text(economyManager.formatDollar(totalPrice), NamedTextColor.GOLD, TextDecoration.BOLD))
-                            .append(Component.text("!", NamedTextColor.GREEN)));
+                            .append(Component.text(economyManager.formatDollar(totalPrice), NamedTextColor.GREEN, TextDecoration.BOLD)));
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
                     player.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 1.5f);
                     player.closeInventory();
@@ -209,7 +204,7 @@ public class InventoryClickListener implements Listener {
         }
 
         // 6. Konfirmasi Penjualan Barang GUI (/sell)
-        if (title.contains("📝 Konfirmasi Penjualan Barang")) {
+        if (title.contains("Konfirmasi Penjualan")) {
             event.setCancelled(true);
             int slot = event.getSlot();
             UUID uuid = player.getUniqueId();
@@ -233,11 +228,10 @@ public class InventoryClickListener implements Listener {
                         economyManager.addItemsSold(uuid, totalCount);
                         scoreboardManager.updateScoreboard(player);
 
-                        player.sendMessage(Component.text("💰 Berhasil menjual ", NamedTextColor.GREEN)
+                        player.sendMessage(Component.text("Berhasil menjual ", NamedTextColor.GREEN)
                                 .append(Component.text(totalCount + " item", NamedTextColor.YELLOW))
                                 .append(Component.text(" senilai ", NamedTextColor.GREEN))
-                                .append(Component.text(economyManager.formatDollar(totalMoney), NamedTextColor.GOLD, TextDecoration.BOLD))
-                                .append(Component.text("!", NamedTextColor.GREEN)));
+                                .append(Component.text(economyManager.formatDollar(totalMoney), NamedTextColor.GREEN, TextDecoration.BOLD)));
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
                         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 2.0f);
                     }
@@ -253,7 +247,7 @@ public class InventoryClickListener implements Listener {
                         }
                     }
                 }
-                player.sendMessage(Component.text("❌ Penjualan dibatalkan, semua item telah dikembalikan.", NamedTextColor.YELLOW));
+                player.sendMessage(Component.text("Penjualan dibatalkan.", NamedTextColor.YELLOW));
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 player.closeInventory();
             }
@@ -290,10 +284,10 @@ public class InventoryClickListener implements Listener {
                         }
                     }
                     if (addedCount > 0) {
-                        player.sendMessage(Component.text("📥 Berhasil memindahkan " + addedCount + " item dari tas ke GUI!", NamedTextColor.AQUA));
+                        player.sendMessage(Component.text("Berhasil memindahkan " + addedCount + " item.", NamedTextColor.GREEN));
                         player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_GENERIC, 1.0f, 1.2f);
                     } else {
-                        player.sendMessage(Component.text("⚠️ Tidak ada item di tas kamu yang bisa dijual atau GUI sudah penuh!", NamedTextColor.YELLOW));
+                        player.sendMessage(Component.text("Tidak ada item yang bisa dijual.", NamedTextColor.YELLOW));
                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                     }
                 } else if (slot == 31) {
@@ -317,7 +311,7 @@ public class InventoryClickListener implements Listener {
                         }
                     }
                     if (returnedCount > 0) {
-                        player.sendMessage(Component.text("📤 Berhasil mengembalikan " + returnedCount + " item ke tas kamu!", NamedTextColor.YELLOW));
+                        player.sendMessage(Component.text("Mengembalikan " + returnedCount + " item.", NamedTextColor.YELLOW));
                         player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
                     }
                 }
@@ -326,7 +320,7 @@ public class InventoryClickListener implements Listener {
         }
 
         // 8. Papan Pesanan / Order (/order)
-        if (title.contains("📋 Papan Pesanan / Order")) {
+        if (title.contains("Papan Pesanan / Order")) {
             event.setCancelled(true);
             int slot = event.getSlot();
 
@@ -342,12 +336,12 @@ public class InventoryClickListener implements Listener {
 
             if (slot == 48 && currentPage > 1) {
                 player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 0.9f);
-                new OrderCommand(orderManager, economyManager).openOrderGUI(player, currentPage - 1);
+                new com.medieval.economy.commands.OrderCommand(orderManager, economyManager).openOrderGUI(player, currentPage - 1);
                 return;
             }
             if (slot == 50 && currentPage < maxPages) {
                 player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.1f);
-                new OrderCommand(orderManager, economyManager).openOrderGUI(player, currentPage + 1);
+                new com.medieval.economy.commands.OrderCommand(orderManager, economyManager).openOrderGUI(player, currentPage + 1);
                 return;
             }
 
@@ -356,26 +350,23 @@ public class InventoryClickListener implements Listener {
                 if (actualIndex < orders.size()) {
                     OrderManager.OrderListing order = orders.get(actualIndex);
 
-                    // Pemesan membatalkan order miliknya
                     if (order.requesterUUID().equals(player.getUniqueId())) {
                         economyManager.addDollar(player.getUniqueId(), order.rewardDollar());
                         orderManager.removeOrder(order.id());
                         scoreboardManager.updateScoreboard(player);
 
-                        player.sendMessage(Component.text("✅ Order berhasil dibatalkan. Uang imbalan ", NamedTextColor.GREEN)
-                                .append(Component.text(economyManager.formatDollar(order.rewardDollar()), NamedTextColor.GOLD))
-                                .append(Component.text(" telah dikembalikan!", NamedTextColor.GREEN)));
+                        player.sendMessage(Component.text("Order dibatalkan. Uang ", NamedTextColor.GREEN)
+                                .append(Component.text(economyManager.formatDollar(order.rewardDollar()), NamedTextColor.GREEN))
+                                .append(Component.text(" telah dikembalikan.", NamedTextColor.GREEN)));
                         player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
                         player.closeInventory();
                         return;
                     }
 
-                    // Pemain lain menyelesaikan order
                     ItemStack required = order.requestedItem();
                     if (!player.getInventory().containsAtLeast(required, required.getAmount())) {
-                        player.sendMessage(Component.text("❌ Kamu gak punya item ", NamedTextColor.RED)
-                                .append(Component.text(required.getAmount() + "x " + required.getType().name(), NamedTextColor.YELLOW))
-                                .append(Component.text(" di inventory buat menyelesaikan pesanan ini!", NamedTextColor.RED)));
+                        player.sendMessage(Component.text("❌ Kamu tidak punya item ", NamedTextColor.RED)
+                                .append(Component.text(required.getAmount() + "x " + required.getType().name(), NamedTextColor.YELLOW)));
                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                         return;
                     }
@@ -387,11 +378,10 @@ public class InventoryClickListener implements Listener {
                     orderManager.removeOrder(order.id());
                     scoreboardManager.updateScoreboard(player);
 
-                    player.sendMessage(Component.text("🎉 Berhasil menyelesaikan pesanan dari ", NamedTextColor.GREEN)
+                    player.sendMessage(Component.text("Berhasil menyelesaikan pesanan dari ", NamedTextColor.GREEN)
                             .append(Component.text(order.requesterName(), NamedTextColor.YELLOW))
-                            .append(Component.text("! Kamu mendapat imbalan ", NamedTextColor.GREEN))
-                            .append(Component.text(economyManager.formatDollar(order.rewardDollar()), NamedTextColor.GOLD, TextDecoration.BOLD))
-                            .append(Component.text("!", NamedTextColor.GREEN)));
+                            .append(Component.text("! Imbalan: ", NamedTextColor.GREEN))
+                            .append(Component.text(economyManager.formatDollar(order.rewardDollar()), NamedTextColor.GREEN, TextDecoration.BOLD)));
                     player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
 
                     Player requester = Bukkit.getPlayer(order.requesterUUID());
@@ -400,11 +390,10 @@ public class InventoryClickListener implements Listener {
                         for (ItemStack drop : overflow.values()) {
                             requester.getWorld().dropItemNaturally(requester.getLocation(), drop);
                         }
-                        requester.sendMessage(Component.text("🎉 Pesanan kamu ", NamedTextColor.GREEN)
+                        requester.sendMessage(Component.text("Pesanan ", NamedTextColor.GREEN)
                                 .append(Component.text(required.getAmount() + "x " + required.getType().name(), NamedTextColor.YELLOW))
                                 .append(Component.text(" telah diselesaikan oleh ", NamedTextColor.GREEN))
-                                .append(Component.text(player.getName(), NamedTextColor.YELLOW))
-                                .append(Component.text("! Item telah masuk ke tas kamu.", NamedTextColor.GREEN)));
+                                .append(Component.text(player.getName(), NamedTextColor.YELLOW)));
                         requester.playSound(requester.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
                     }
 
@@ -415,7 +404,7 @@ public class InventoryClickListener implements Listener {
         }
 
         // 9. Pasar Lelang (/auctions)
-        if (title.contains("⚖️ Lelang [")) {
+        if (title.contains("Lelang [")) {
             event.setCancelled(true);
             int slot = event.getSlot();
 
@@ -437,19 +426,19 @@ public class InventoryClickListener implements Listener {
                 AuctionManager.AuctionCategory[] cats = AuctionManager.AuctionCategory.values();
                 if (catIndex < cats.length) {
                     player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.2f);
-                    new AuctionsCommand(auctionManager, economyManager).openAuctionGUI(player, cats[catIndex], 1);
+                    new com.medieval.economy.commands.AuctionsCommand(auctionManager, economyManager).openAuctionGUI(player, cats[catIndex], 1);
                 }
                 return;
             }
 
             if (slot == 48 && currentPage > 1) {
                 player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 0.9f);
-                new AuctionsCommand(auctionManager, economyManager).openAuctionGUI(player, cat, currentPage - 1);
+                new com.medieval.economy.commands.AuctionsCommand(auctionManager, economyManager).openAuctionGUI(player, cat, currentPage - 1);
                 return;
             }
             if (slot == 50 && currentPage < maxPages) {
                 player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.1f);
-                new AuctionsCommand(auctionManager, economyManager).openAuctionGUI(player, cat, currentPage + 1);
+                new com.medieval.economy.commands.AuctionsCommand(auctionManager, economyManager).openAuctionGUI(player, cat, currentPage + 1);
                 return;
             }
 
@@ -461,28 +450,28 @@ public class InventoryClickListener implements Listener {
                     if (listing.sellerUUID().equals(player.getUniqueId())) {
                         HashMap<Integer, ItemStack> overflow = player.getInventory().addItem(listing.item());
                         if (!overflow.isEmpty()) {
-                            player.sendMessage(Component.text("❌ Tas/Inventory kamu penuh! Kosongkan slot dulu.", NamedTextColor.RED));
+                            player.sendMessage(Component.text("❌ Inventory kamu penuh!", NamedTextColor.RED));
                             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                             return;
                         }
 
                         auctionManager.removeListing(listing.id());
-                        player.sendMessage(Component.text("✅ Lelang berhasil dibatalkan. Item telah dikembalikan ke inventory kamu!", NamedTextColor.GREEN));
+                        player.sendMessage(Component.text("Lelang dibatalkan. Item telah dikembalikan.", NamedTextColor.GREEN));
                         player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
                         player.closeInventory();
                         return;
                     }
 
                     if (!economyManager.hasDollar(player.getUniqueId(), listing.price())) {
-                        player.sendMessage(Component.text("❌ Uang Dollar kamu gak cukup buat beli item lelang ini! Butuh ", NamedTextColor.RED)
-                                .append(Component.text(economyManager.formatDollar(listing.price()), NamedTextColor.GOLD)));
+                        player.sendMessage(Component.text("❌ Uang tidak cukup! Butuh ", NamedTextColor.RED)
+                                .append(Component.text(economyManager.formatDollar(listing.price()), NamedTextColor.GREEN)));
                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                         return;
                     }
 
                     HashMap<Integer, ItemStack> overflow = player.getInventory().addItem(listing.item());
                     if (!overflow.isEmpty()) {
-                        player.sendMessage(Component.text("❌ Tas/Inventory kamu penuh! Kosongkan slot dulu.", NamedTextColor.RED));
+                        player.sendMessage(Component.text("❌ Inventory kamu penuh!", NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                         return;
                     }
@@ -495,22 +484,20 @@ public class InventoryClickListener implements Listener {
                     scoreboardManager.updateScoreboard(player);
                     auctionManager.removeListing(listing.id());
 
-                    player.sendMessage(Component.text("🎉 Berhasil membeli item lelang seharga ", NamedTextColor.GREEN)
-                            .append(Component.text(economyManager.formatDollar(listing.price()), NamedTextColor.GOLD, TextDecoration.BOLD))
+                    player.sendMessage(Component.text("Berhasil membeli item lelang seharga ", NamedTextColor.GREEN)
+                            .append(Component.text(economyManager.formatDollar(listing.price()), NamedTextColor.GREEN, TextDecoration.BOLD))
                             .append(Component.text(" dari ", NamedTextColor.GREEN))
-                            .append(Component.text(listing.sellerName(), NamedTextColor.YELLOW))
-                            .append(Component.text("!", NamedTextColor.GREEN)));
+                            .append(Component.text(listing.sellerName(), NamedTextColor.YELLOW)));
                     player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
                     player.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 1.5f);
 
                     Player seller = Bukkit.getPlayer(listing.sellerUUID());
                     if (seller != null && seller.isOnline()) {
                         scoreboardManager.updateScoreboard(seller);
-                        seller.sendMessage(Component.text("🎉 Item lelang kamu berhasil dibeli oleh ", NamedTextColor.GREEN)
+                        seller.sendMessage(Component.text("Item lelang kamu dibeli oleh ", NamedTextColor.GREEN)
                                 .append(Component.text(player.getName(), NamedTextColor.YELLOW))
-                                .append(Component.text("! Kamu menerima ", NamedTextColor.GREEN))
-                                .append(Component.text(economyManager.formatDollar(listing.price()), NamedTextColor.GOLD, TextDecoration.BOLD))
-                                .append(Component.text("!", NamedTextColor.GREEN)));
+                                .append(Component.text("! Menerima ", NamedTextColor.GREEN))
+                                .append(Component.text(economyManager.formatDollar(listing.price()), NamedTextColor.GREEN, TextDecoration.BOLD)));
                         seller.playSound(seller.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f);
                     }
 
@@ -539,7 +526,7 @@ public class InventoryClickListener implements Listener {
         }
 
         if (totalItemsCount == 0) {
-            player.sendMessage(Component.text("⚠️ Taruh item yang mau dijual di dalam GUI terlebih dahulu!", NamedTextColor.YELLOW));
+            player.sendMessage(Component.text("Taruh item yang mau dijual terlebih dahulu.", NamedTextColor.YELLOW));
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             return;
         }
@@ -553,11 +540,10 @@ public class InventoryClickListener implements Listener {
             economyManager.addItemsSold(player.getUniqueId(), totalItemsCount);
             scoreboardManager.updateScoreboard(player);
 
-            player.sendMessage(Component.text("💰 Berhasil menjual ", NamedTextColor.GREEN)
+            player.sendMessage(Component.text("Berhasil menjual ", NamedTextColor.GREEN)
                     .append(Component.text(totalItemsCount + " item", NamedTextColor.YELLOW))
                     .append(Component.text(" senilai ", NamedTextColor.GREEN))
-                    .append(Component.text(economyManager.formatDollar(totalMoney), NamedTextColor.GOLD, TextDecoration.BOLD))
-                    .append(Component.text("!", NamedTextColor.GREEN)));
+                    .append(Component.text(economyManager.formatDollar(totalMoney), NamedTextColor.GREEN, TextDecoration.BOLD)));
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 2.0f);
             player.closeInventory();
@@ -565,18 +551,15 @@ public class InventoryClickListener implements Listener {
     }
 
     private void openConfirmSellGUI(Player player, double totalMoney, int itemCount) {
-        Inventory gui = Bukkit.createInventory(null, 27, Component.text("📝 Konfirmasi Penjualan Barang", NamedTextColor.DARK_GRAY));
+        Inventory gui = Bukkit.createInventory(null, 27, Component.text("Konfirmasi Penjualan", NamedTextColor.DARK_GRAY));
 
         ItemStack agree = new ItemStack(Material.EMERALD_BLOCK);
         ItemMeta agreeMeta = agree.getItemMeta();
         if (agreeMeta != null) {
-            agreeMeta.displayName(Component.text("✅ SETUJU JUAL", NamedTextColor.GREEN, TextDecoration.BOLD));
+            agreeMeta.displayName(Component.text("SETUJU JUAL", NamedTextColor.GREEN, TextDecoration.BOLD));
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
-            lore.add(Component.text("📦 Total Item: ", NamedTextColor.GRAY).append(Component.text(itemCount + " item", NamedTextColor.WHITE)));
-            lore.add(Component.text("💵 Estimasi Uang: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatDollar(totalMoney), NamedTextColor.GOLD, TextDecoration.BOLD)));
-            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
-            lore.add(Component.text("👉 Klik untuk memproses penjualan!", NamedTextColor.GREEN, TextDecoration.ITALIC));
+            lore.add(Component.text("Total Item: ", NamedTextColor.GRAY).append(Component.text(itemCount + " item", NamedTextColor.WHITE)));
+            lore.add(Component.text("Estimasi: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatDollar(totalMoney), NamedTextColor.GREEN, TextDecoration.BOLD)));
             agreeMeta.lore(lore);
             agree.setItemMeta(agreeMeta);
         }
@@ -585,13 +568,7 @@ public class InventoryClickListener implements Listener {
         ItemStack cancel = new ItemStack(Material.REDSTONE_BLOCK);
         ItemMeta cancelMeta = cancel.getItemMeta();
         if (cancelMeta != null) {
-            cancelMeta.displayName(Component.text("❌ BATALKAN", NamedTextColor.RED, TextDecoration.BOLD));
-            List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
-            lore.add(Component.text("Klik untuk membatalkan dan mengambil", NamedTextColor.YELLOW));
-            lore.add(Component.text("kembali semua item kamu.", NamedTextColor.YELLOW));
-            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
-            cancelMeta.lore(lore);
+            cancelMeta.displayName(Component.text("BATALKAN", NamedTextColor.RED, TextDecoration.BOLD));
             cancel.setItemMeta(cancelMeta);
         }
         gui.setItem(15, cancel);
