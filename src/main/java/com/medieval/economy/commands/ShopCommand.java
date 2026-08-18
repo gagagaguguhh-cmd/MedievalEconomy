@@ -39,7 +39,6 @@ public class ShopCommand implements CommandExecutor {
         return true;
     }
 
-    // Menu Utama Kategori Toko (Simetris & Estetis)
     public void openShopMainMenu(Player player) {
         Inventory gui = Bukkit.createInventory(null, 36, Component.text("🏰 TOKO KERAJAAN - KATEGORI", NamedTextColor.DARK_GREEN));
 
@@ -63,7 +62,6 @@ public class ShopCommand implements CommandExecutor {
             gui.setItem(slots[i], item);
         }
 
-        // Bingkai Estetis GUI
         ItemStack border = new ItemStack(Material.GREEN_STAINED_GLASS_PANE);
         ItemMeta borderMeta = border.getItemMeta();
         if (borderMeta != null) {
@@ -79,7 +77,6 @@ public class ShopCommand implements CommandExecutor {
         player.openInventory(gui);
     }
 
-    // Sub-Menu Kategori Toko
     public void openCategoryMenu(Player player, ShopManager.ShopCategory category) {
         Inventory gui = Bukkit.createInventory(null, 54, Component.text("🛒 Kategori: " + category.getDisplayName(), NamedTextColor.DARK_GREEN));
 
@@ -98,7 +95,7 @@ public class ShopCommand implements CommandExecutor {
                 meta.displayName(Component.text(shopItem.displayName(), NamedTextColor.YELLOW, TextDecoration.BOLD));
                 List<Component> lore = new ArrayList<>();
                 lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
-                lore.add(Component.text("💵 Harga Dasar (1x): ", NamedTextColor.GRAY).append(Component.text(economyManager.formatMoney(shopItem.buyPrice()), NamedTextColor.GOLD, TextDecoration.BOLD)));
+                lore.add(Component.text("💵 Harga Dasar (1x): ", NamedTextColor.GRAY).append(Component.text(economyManager.formatDollar(shopItem.buyPrice()), NamedTextColor.GOLD, TextDecoration.BOLD)));
                 lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
                 lore.add(Component.text("👉 Klik untuk pilih jumlah beli!", NamedTextColor.GREEN, TextDecoration.ITALIC));
                 meta.lore(lore);
@@ -107,7 +104,6 @@ public class ShopCommand implements CommandExecutor {
             gui.setItem(itemSlots[i], item);
         }
 
-        // Tombol Kembali
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta backMeta = back.getItemMeta();
         if (backMeta != null) {
@@ -116,7 +112,6 @@ public class ShopCommand implements CommandExecutor {
         }
         gui.setItem(49, back);
 
-        // Bingkai Estetis Glass Pane
         ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
         if (fillerMeta != null) {
@@ -132,7 +127,6 @@ public class ShopCommand implements CommandExecutor {
         player.openInventory(gui);
     }
 
-    // GUI Pilihan Jumlah Pembelian (1x, 16x, 32x, 64x)
     public void openQuantityMenu(Player player, ShopManager.ShopItem shopItem) {
         Inventory gui = Bukkit.createInventory(null, 27, Component.text("📦 Beli: " + shopItem.displayName(), NamedTextColor.DARK_GREEN));
 
@@ -150,7 +144,7 @@ public class ShopCommand implements CommandExecutor {
                 List<Component> lore = new ArrayList<>();
                 lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
                 lore.add(Component.text("📦 Jumlah: ", NamedTextColor.GRAY).append(Component.text(qty + "x", NamedTextColor.WHITE)));
-                lore.add(Component.text("💵 Total Harga: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatMoney(totalPrice), NamedTextColor.GOLD, TextDecoration.BOLD)));
+                lore.add(Component.text("💵 Total Harga: ", NamedTextColor.GRAY).append(Component.text(economyManager.formatDollar(totalPrice), NamedTextColor.GOLD, TextDecoration.BOLD)));
                 lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
                 lore.add(Component.text("👉 Klik untuk konfirmasi beli!", NamedTextColor.GREEN, TextDecoration.ITALIC));
                 meta.lore(lore);
@@ -159,7 +153,6 @@ public class ShopCommand implements CommandExecutor {
             gui.setItem(slots[i], option);
         }
 
-        // Tombol Batal / Kembali
         ItemStack cancel = new ItemStack(Material.BARRIER);
         ItemMeta cancelMeta = cancel.getItemMeta();
         if (cancelMeta != null) {
@@ -168,7 +161,6 @@ public class ShopCommand implements CommandExecutor {
         }
         gui.setItem(22, cancel);
 
-        // Bingkai
         ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
         if (fillerMeta != null) {
