@@ -1,6 +1,7 @@
 package com.medieval.economy.commands;
 
 import com.medieval.economy.managers.EconomyManager;
+import com.medieval.economy.managers.RPGManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -22,9 +23,11 @@ import java.util.UUID;
 public class AkunCommand implements CommandExecutor {
 
     private final EconomyManager economyManager;
+    private final RPGManager rpgManager;
 
-    public AkunCommand(EconomyManager economyManager) {
+    public AkunCommand(EconomyManager economyManager, RPGManager rpgManager) {
         this.economyManager = economyManager;
+        this.rpgManager = rpgManager;
     }
 
     @Override
@@ -35,7 +38,12 @@ public class AkunCommand implements CommandExecutor {
         }
 
         UUID uuid = player.getUniqueId();
-        Inventory gui = Bukkit.createInventory(null, 27, Component.text("📜 Profil & Ringkasan Akun", NamedTextColor.DARK_GRAY));
+        if (!rpgManager.isInitiated(uuid)) {
+            player.sendMessage(Component.text("❌ Kamu belum bertemu Tetua RPG di Desa! Cari dan temui Tetua RPG untuk membuka fitur akun & status RPG.", NamedTextColor.RED));
+            return true;
+        }
+
+        Inventory gui = Bukkit.createInventory(null, 27, Component.text("📜 Profil & Ringkasan Akun RPG", NamedTextColor.DARK_GRAY));
 
         // Panel Kepala Player
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
@@ -50,7 +58,27 @@ public class AkunCommand implements CommandExecutor {
             headMeta.lore(lore);
             head.setItemMeta(headMeta);
         }
-        gui.setItem(11, head);
+        gui.setItem(10, head);
+
+        // Panel Status RPG Level & EXP
+        ItemStack rpgItem = new ItemStack(Material.NETHER_STAR);
+        ItemMeta rpgMeta = rpgItem.getItemMeta();
+        if (rpgMeta != null) {
+            rpgMeta.displayName(Component.text("⚔️ Status RPG & Leveling", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD));
+            List<Component> lore = new ArrayList<>();
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+            int level = rpgManager.getLevel(uuid);
+            long exp = rpgManager.getExp(uuid);
+            long reqExp = rpgManager.getRequiredExpForNextLevel(level);
+
+            lore.add(Component.text("⭐ Level RPG: ", NamedTextColor.GRAY).append(Component.text("Lvl " + level, NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD)));
+            lore.add(Component.text("✨ EXP: ", NamedTextColor.GRAY).append(Component.text(exp + " / " + reqExp, NamedTextColor.AQUA)));
+            lore.add(Component.text("📜 Status: ", NamedTextColor.GRAY).append(Component.text("Terinisiasi oleh Tetua RPG", NamedTextColor.GREEN)));
+            lore.add(Component.text("─────────────────────────", NamedTextColor.DARK_GRAY));
+            rpgMeta.lore(lore);
+            rpgItem.setItemMeta(rpgMeta);
+        }
+        gui.setItem(12, rpgItem);
 
         // Panel Keuangan (Dollar & Gold)
         ItemStack money = new ItemStack(Material.EMERALD);
@@ -67,7 +95,7 @@ public class AkunCommand implements CommandExecutor {
             moneyMeta.lore(lore);
             money.setItemMeta(moneyMeta);
         }
-        gui.setItem(13, money);
+        gui.setItem(14, money);
 
         // Panel Statistik Dagang
         ItemStack stats = new ItemStack(Material.CHEST);
@@ -82,7 +110,7 @@ public class AkunCommand implements CommandExecutor {
             statsMeta.lore(lore);
             stats.setItemMeta(statsMeta);
         }
-        gui.setItem(15, stats);
+        gui.setItem(16, stats);
 
         // Decorate background
         ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
