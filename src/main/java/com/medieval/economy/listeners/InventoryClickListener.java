@@ -1,7 +1,7 @@
 package com.medieval.economy.listeners;
 
-import com.medieval.economy.commands.ShopCommand;
 import com.medieval.economy.commands.SettingsCommand;
+import com.medieval.economy.commands.ShopCommand;
 import com.medieval.economy.managers.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -100,21 +100,32 @@ public class InventoryClickListener implements Listener {
 
             if (selectedCategory != null) {
                 player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.2f);
-                new ShopCommand(shopManager, economyManager).openCategoryMenu(player, selectedCategory);
+                new ShopCommand(shopManager, economyManager).openCategoryMenu(player, selectedCategory, 1);
             }
             return;
         }
 
-        // 4. Sub-Menu Toko Kategori
+        // 4. Sub-Menu Toko Kategori (Toko: <Kategori> (Hal. X/Y))
         if (title.startsWith("Toko: ")) {
             event.setCancelled(true);
             int slot = event.getSlot();
 
-            if (slot == 49) {
-                player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 0.8f);
-                new ShopCommand(shopManager, economyManager).openShopMainMenu(player);
-                return;
+            // Header bar category switching (Slots 1-5)
+            int[] categorySlots = {1, 2, 3, 4, 5};
+            ShopManager.ShopCategory[] categories = ShopManager.ShopCategory.values();
+            for (int i = 0; i < categorySlots.length && i < categories.length; i++) {
+                if (slot == categorySlots[i]) {
+                    player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.2f);
+                    new ShopCommand(shopManager, economyManager).openCategoryMenu(player, categories[i], 1);
+                    return;
+                }
             }
+
+            int currentPage = 1;
+            try {
+                String pageStr = title.substring(title.indexOf("Hal.") + 4, title.indexOf("/"));
+                currentPage = Integer.parseInt(pageStr.trim());
+            } catch (Exception ignored) {}
 
             ShopManager.ShopCategory matchedCategory = null;
             for (ShopManager.ShopCategory cat : ShopManager.ShopCategory.values()) {
@@ -124,19 +135,43 @@ public class InventoryClickListener implements Listener {
                 }
             }
 
+            // Footer Navigation
+            if (slot == 48 && currentPage > 1 && matchedCategory != null) {
+                player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 0.9f);
+                new ShopCommand(shopManager, economyManager).openCategoryMenu(player, matchedCategory, currentPage - 1);
+                return;
+            }
+            if (slot == 49) {
+                player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 0.8f);
+                new ShopCommand(shopManager, economyManager).openShopMainMenu(player);
+                return;
+            }
+            if (slot == 50 && matchedCategory != null) {
+                player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.1f);
+                new ShopCommand(shopManager, economyManager).openCategoryMenu(player, matchedCategory, currentPage + 1);
+                return;
+            }
+
+            // Click Item to Open Quantity Menu
             if (matchedCategory != null) {
                 List<ShopManager.ShopItem> categoryItems = shopManager.getItemsByCategory(matchedCategory);
+                int itemsPerPage = 28;
                 int[] itemSlots = {
                     10, 11, 12, 13, 14, 15, 16,
                     19, 20, 21, 22, 23, 24, 25,
-                    28, 29, 30, 31, 32, 33, 34
+                    28, 29, 30, 31, 32, 33, 34,
+                    37, 38, 39, 40, 41, 42, 43
                 };
 
-                for (int i = 0; i < itemSlots.length && i < categoryItems.size(); i++) {
+                int startIndex = (currentPage - 1) * itemsPerPage;
+                for (int i = 0; i < itemSlots.length; i++) {
                     if (slot == itemSlots[i]) {
-                        ShopManager.ShopItem shopItem = categoryItems.get(i);
-                        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.2f);
-                        new ShopCommand(shopManager, economyManager).openQuantityMenu(player, shopItem);
+                        int itemIndex = startIndex + i;
+                        if (itemIndex < categoryItems.size()) {
+                            ShopManager.ShopItem shopItem = categoryItems.get(itemIndex);
+                            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.2f);
+                            new ShopCommand(shopManager, economyManager).openQuantityMenu(player, shopItem, 1);
+                        }
                         return;
                     }
                 }
@@ -144,16 +179,10 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
-        // 5. GUI Pilihan Jumlah Pembelian (/shop)
+        // 5. GUI Pilihan Jumlah Pembelian Kustom (/shop)
         if (title.startsWith("Beli: ")) {
             event.setCancelled(true);
             int slot = event.getSlot();
-
-            if (slot == 22) {
-                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 0.8f);
-                new ShopCommand(shopManager, economyManager).openShopMainMenu(player);
-                return;
-            }
 
             String itemName = title.substring(6);
             ShopManager.ShopItem targetItem = null;
@@ -168,43 +197,68 @@ public class InventoryClickListener implements Listener {
                 if (targetItem != null) break;
             }
 
-            if (targetItem != null) {
-                int qty = 0;
-                if (slot == 10) qty = 1;
-                else if (slot == 12) qty = 16;
-                else if (slot == 14) qty = 32;
-                else if (slot == 16) qty = 64;
+            if (targetItem == null) return;
 
-                if (qty > 0) {
-                    double totalPrice = targetItem.buyPrice() * qty;
+            // Extract current quantity from item in slot 13
+            ItemStack centerItem = event.getInventory().getItem(13);
+            int currentQty = 1;
+            if (centerItem != null) {
+                currentQty = centerItem.getAmount();
+            }
 
-                    if (!economyManager.hasDollar(player.getUniqueId(), totalPrice)) {
-                        player.sendMessage(Component.text("❌ Uang tidak cukup! Butuh ", NamedTextColor.RED)
-                                .append(Component.text(economyManager.formatDollar(totalPrice), NamedTextColor.GREEN)));
-                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
-                        return;
-                    }
+            // Modifiers (-64, -16, -1, +1, +16, +64)
+            int delta = 0;
+            if (slot == 10) delta = -64;
+            else if (slot == 11) delta = -16;
+            else if (slot == 12) delta = -1;
+            else if (slot == 14) delta = 1;
+            else if (slot == 15) delta = 16;
+            else if (slot == 16) delta = 64;
 
-                    ItemStack buyItem = targetItem.createItemStack(qty);
-                    HashMap<Integer, ItemStack> overflow = player.getInventory().addItem(buyItem);
-                    if (!overflow.isEmpty()) {
-                        player.sendMessage(Component.text("❌ Inventory kamu penuh!", NamedTextColor.RED));
-                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
-                        return;
-                    }
+            if (delta != 0) {
+                int newQty = Math.max(1, Math.min(64, currentQty + delta));
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.5f);
+                new ShopCommand(shopManager, economyManager).openQuantityMenu(player, targetItem, newQty);
+                return;
+            }
 
-                    economyManager.withdrawDollar(player.getUniqueId(), totalPrice);
-                    economyManager.addItemsBought(player.getUniqueId(), qty);
-                    scoreboardManager.updateScoreboard(player);
+            // Cancel / Back (Slot 33)
+            if (slot == 33) {
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 0.8f);
+                new ShopCommand(shopManager, economyManager).openCategoryMenu(player, targetItem.category(), 1);
+                return;
+            }
 
-                    player.sendMessage(Component.text("Berhasil membeli ", NamedTextColor.GREEN)
-                            .append(Component.text(qty + "x " + targetItem.displayName(), NamedTextColor.YELLOW))
-                            .append(Component.text(" seharga ", NamedTextColor.GREEN))
-                            .append(Component.text(economyManager.formatDollar(totalPrice), NamedTextColor.GREEN, TextDecoration.BOLD)));
-                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
-                    player.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 1.5f);
-                    player.closeInventory();
+            // Confirm Purchase (Slot 29)
+            if (slot == 29) {
+                double totalPrice = targetItem.buyPrice() * currentQty;
+
+                if (!economyManager.hasDollar(player.getUniqueId(), totalPrice)) {
+                    player.sendMessage(Component.text("❌ Uang tidak cukup! Butuh ", NamedTextColor.RED)
+                            .append(Component.text(economyManager.formatDollar(totalPrice), NamedTextColor.GREEN)));
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    return;
                 }
+
+                ItemStack buyItem = targetItem.createItemStack(currentQty);
+                HashMap<Integer, ItemStack> overflow = player.getInventory().addItem(buyItem);
+                if (!overflow.isEmpty()) {
+                    player.sendMessage(Component.text("❌ Inventory kamu penuh!", NamedTextColor.RED));
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    return;
+                }
+
+                economyManager.withdrawDollar(player.getUniqueId(), totalPrice);
+                economyManager.addItemsBought(player.getUniqueId(), currentQty);
+                scoreboardManager.updateScoreboard(player);
+
+                player.sendMessage(Component.text("Berhasil membeli ", NamedTextColor.GREEN)
+                        .append(Component.text(currentQty + "x " + targetItem.displayName(), NamedTextColor.YELLOW))
+                        .append(Component.text(" seharga ", NamedTextColor.GREEN))
+                        .append(Component.text(economyManager.formatDollar(totalPrice), NamedTextColor.GREEN, TextDecoration.BOLD)));
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
+                player.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 1.5f);
+                player.closeInventory();
             }
             return;
         }
